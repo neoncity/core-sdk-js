@@ -30,11 +30,12 @@
   },
   "license": "UNLICENSED",
   "dependencies": {
+    "@neoncity/identity-sdk-js": "^0.5.2",
+    "@neoncity/common-js": "^0.16.0",
     "es6-promise": "^4.0.5",
     "isomorphic-fetch": "^2.2.1"
   },
   "devDependencies": {
-    "@neoncity/common-js": "^0.16.0",
     "@neoncity/togemfury": "^0.0.9",
     "@types/chai": "^3.4.34",
     "@types/es6-promise": "0.0.32",
