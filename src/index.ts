@@ -176,15 +176,15 @@ export class CauseResponse {
 }
 
 
-export class CauseDonationResponse {
-    @MarshalWith(MarshalFrom(DonationForCause))
-    donation: DonationForCause;
+export class UserDonationResponse {
+    @MarshalWith(MarshalFrom(DonationForUser))
+    donation: DonationForUser;
 }
 
 
-export class CauseShareResponse {
-    @MarshalWith(MarshalFrom(ShareForCause))
-    share: ShareForCause;
+export class UserShareResponse {
+    @MarshalWith(MarshalFrom(ShareForUser))
+    share: ShareForUser;
 }
 
 
@@ -253,15 +253,39 @@ export class CoreError extends Error {
 }
 
 
+export interface UpdateCauseOptions {
+    title?: string;
+    description?: string;
+    pictures?: Picture[];
+    deadline?: Date;
+    goal?: CurrencyAmount;
+    bankInfo?: BankInfo;
+}
+
+
 export function newCoreService(auth0AccessToken: string, coreServiceHost: string) {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
+    const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest));
+    const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest));
+    const createDonationRequestMarshaller = new (MarshalFrom(CreateDonationRequest));
+    const createShareRequestMarshaller = new (MarshalFrom(CreateShareRequest));
     const causesResponseMarshaller = new (MarshalFrom(CausesResponse));
+    const causeResponseMarshaller = new (MarshalFrom(CauseResponse));
+    const userDonationResponseMarshaller = new (MarshalFrom(UserDonationResponse));
+    const userShareResponseMarshaller = new (MarshalFrom(UserShareResponse));
     
     return new CoreService(
         auth0AccessToken,
         coreServiceHost,
         authInfoMarshaller,
-        causesResponseMarshaller);
+	createCauseRequestMarshaller,
+	updateCauseRequestMarshaller,
+	createDonationRequestMarshaller,
+	createShareRequestMarshaller,
+        causesResponseMarshaller,
+	causeResponseMarshaller,
+	userDonationResponseMarshaller,
+	userShareResponseMarshaller);
 }
 
 
@@ -273,33 +297,104 @@ export class CoreService {
 	redirect: 'error',
 	referrer: 'client'
     };
+
+    private static readonly _createCauseOptions: RequestInit = {
+	method: 'POST',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'
+    };
+
+    private static readonly _getCauseOptions: RequestInit = {
+	method: 'GET',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'
+    };
+
+    private static readonly _updateCauseOptions: RequestInit = {
+	method: 'PUT',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'
+    };    
+
+    private static readonly _deleteCauseOptions: RequestInit = {
+	method: 'DELETE',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'
+    };
+
+    private static readonly _createDonationOptions: RequestInit = {
+	method: 'POST',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'	
+    };
+
+    private static readonly _createShareOptions: RequestInit = {
+	method: 'POST',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'	
+    };    
     
     private readonly _auth0AccessToken: string;
     private readonly _coreServiceHost: string;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
+    private readonly _createCauseRequestMarshaller: Marshaller<CreateCauseRequest>;
+    private readonly _updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>;
+    private readonly _createDonationRequestMarshaller: Marshaller<CreateDonationRequest>;
+    private readonly _createShareRequestMarshaller: Marshaller<CreateShareRequest>;
     private readonly _causesResponseMarshaller: Marshaller<CausesResponse>;
+    private readonly _causeResponseMarshaller: Marshaller<CauseResponse>;
+    private readonly _userDonationResponseMarshaller: Marshaller<UserDonationResponse>;
+    private readonly _userShareResponseMarshaller: Marshaller<UserShareResponse>;    
 
     constructor(
         auth0AccessToken: string,
         coreServiceHost: string,
         authInfoMarshaller: Marshaller<AuthInfo>,
-        causesResponseMarshaller: Marshaller<CausesResponse>) {
+	createCauseRequestMarshaller: Marshaller<CreateCauseRequest>,
+	updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>,
+	createDonationRequestMarshaller: Marshaller<CreateDonationRequest>,
+	createShareRequestMarshaller: Marshaller<CreateShareRequest>,
+        causesResponseMarshaller: Marshaller<CausesResponse>,
+	causeResponseMarshaller: Marshaller<CauseResponse>,
+	userDonationResponseMarshaller: Marshaller<UserDonationResponse>,
+	userShareResponseMarshaller: Marshaller<UserShareResponse>) {
         this._auth0AccessToken = auth0AccessToken;
         this._coreServiceHost = coreServiceHost;
         this._authInfoMarshaller = authInfoMarshaller;
+	this._createCauseRequestMarshaller = createCauseRequestMarshaller;
+	this._updateCauseRequestMarshaller = updateCauseRequestMarshaller;
+	this._createDonationRequestMarshaller = createDonationRequestMarshaller;
+	this._createShareRequestMarshaller = createShareRequestMarshaller;
         this._causesResponseMarshaller = causesResponseMarshaller;
+	this._causeResponseMarshaller = causeResponseMarshaller;
+	this._userDonationResponseMarshaller = userDonationResponseMarshaller;
+	this._userShareResponseMarshaller = userShareResponseMarshaller;
     }
 
     async getCauses(): Promise<Cause[]> {
 	const authInfo = new AuthInfo(this._auth0AccessToken);
-	const authInfoSerialized = JSON.stringify(this._authInfoMarshaller.pack(authInfo));
-        const options = (Object as any).assign({}, CoreService._getCausesOptions, {headers: {'X-NeonCity-AuthInfo': authInfoSerialized}});
+	
+        const options = (Object as any).assign({}, CoreService._getCausesOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	});
 
         let rawResponse: Response;
         try {
-            rawResponse = await fetch("http://${this._coreServiceHost}/causes", options);
+            rawResponse = await fetch(`http://${this._coreServiceHost}/causes`, options);
         } catch (e) {
-            throw new CoreError("Could not retrieve causes - request failed because '${e.toString()}'");
+            throw new CoreError(`Could not retrieve causes - request failed because '${e.toString()}'`);
         }
 
         if (rawResponse.ok) {
@@ -309,28 +404,202 @@ export class CoreService {
 
                 return causesResponse.causes;
             } catch (e) {
-                throw new CoreError("Could not retrieve causes '${e.toString()}'");
+                throw new CoreError(`Could not retrieve causes - '${e.toString()}'`);
             }
         } else {
-            throw new CoreError("Could not retrieve causes - service response ${rawResponse.status}");
+            throw new CoreError(`Could not retrieve causes - service response ${rawResponse.status}`);
         }
     }
 
     async createCause(title: string, description: string, pictures: Picture[], deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<Cause> {
+	const authInfo = new AuthInfo(this._auth0AccessToken);
+	const createCauseRequest = new CreateCauseRequest();
+	createCauseRequest.title = title;
+	createCauseRequest.description = description;
+	createCauseRequest.pictures = pictures;
+	createCauseRequest.deadline = deadline;
+	createCauseRequest.goal = goal;
+	createCauseRequest.bankInfo = bankInfo;
+
+        const options = (Object as any).assign({}, CoreService._createCauseOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    body: JSON.stringify(this._createCauseRequestMarshaller.pack(createCauseRequest))
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not create cause - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const causeResponse = this._causeResponseMarshaller.extract(jsonResponse);
+
+		return causeResponse.cause;
+	    } catch (e) {
+		throw new CoreError(`Chould not retrieve cause - '${e.toString()}'`);
+	    }
+	} else {
+	    throw new CoreError(`Could not retrieve cause - service response ${rawResponse.status}`);
+	}
     }
 
     async getCause(causeId: number): Promise<Cause> {
+	const authInfo = new AuthInfo(this._auth0AccessToken);
+
+	const options = (Object as any).assign({}, CoreService._getCauseOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not retrieve cause ${causeId} - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const causeResponse = this._causeResponseMarshaller.extract(jsonResponse);
+
+		return causeResponse.cause;
+	    } catch (e) {
+		throw new CoreError(`Could not retrieve cause ${causeId} - '${e.toString()}'`);
+	    }
+	} else {
+	    throw new CoreError(`Could not retrieve cause ${causeId} - service response ${rawResponse.status}`);
+	}
     }
 
-    async updateCause(causeId: number): Promise<Cause> {
+    async updateCause(causeId: number, updateOptions: UpdateCauseOptions): Promise<Cause> {
+	const authInfo = new AuthInfo(this._auth0AccessToken);
+	const updateCauseRequest = new UpdateCauseRequest();
+
+	// Hackety-hack-hack.
+	for (let key in updateOptions) {
+	    (updateCauseRequest as any)[key] = (updateOptions as any)[key];
+	}
+
+	const options = (Object as any).assign({}, CoreService._updateCauseOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    body: JSON.stringify(this._updateCauseRequestMarshaller.pack(updateCauseRequest))
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not update cause ${causeId} - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const causeResponse = this._causeResponseMarshaller.extract(jsonResponse);
+
+		return causeResponse.cause;
+	    } catch (e) {
+		throw new CoreError(`Chould not update cause ${causeId} - '${e.toString()}'`);
+	    }
+	} else {
+	    throw new CoreError(`Could not update cause ${causeId} - service response ${rawResponse.status}`);
+	}
     }
 
-    async deleteCause(causeId: number): Promise<null> {
+    async deleteCause(causeId: number): Promise<void> {
+	const authInfo = new AuthInfo(this._auth0AccessToken);
+
+	const options = (Object as any).assign({}, CoreService._deleteCauseOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not delete cause ${causeId} - request failed because '${e.toString()}'`);
+	}
+
+	if (!rawResponse.ok) {
+	    throw new CoreError(`Could not delete cause ${causeId} - service response ${rawResponse.status}`);
+	}
     }
 
-    async makeDonation(causeId: number): Promise<DonationForUser> {
+    async createDonation(causeId: number, amount: CurrencyAmount): Promise<DonationForUser> {
+	const authInfo = new AuthInfo(this._auth0AccessToken);
+	const createDonationRequest = new CreateDonationRequest();
+	createDonationRequest.amount = amount;
+
+        const options = (Object as any).assign({}, CoreService._createDonationOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    body: JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest))
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}/donations`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not create donation for cause ${causeId} - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const userDonationResponse = this._userDonationResponseMarshaller.extract(jsonResponse);
+
+		return userDonationResponse.donation;
+	    } catch (e) {
+		throw new CoreError(`Chould not create donation for cause ${causeId} - '${e.toString()}'`);
+	    }
+	} else {
+	    throw new CoreError(`Could not create donation for cause ${causeId} - service response ${rawResponse.status}`);
+	}
     }
 
-    async share(causeId: number): Promise<ShareForUser> {
+    async createShare(causeId: number): Promise<ShareForUser> {
+	const authInfo = new AuthInfo(this._auth0AccessToken);
+	const createShareRequest = new CreateShareRequest();
+
+        const options = (Object as any).assign({}, CoreService._createShareOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    body: JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest))
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}/shares`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not create share for cause ${causeId} - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const userShareResponse = this._userShareResponseMarshaller.extract(jsonResponse);
+
+		return userShareResponse.share;
+	    } catch (e) {
+		throw new CoreError(`Chould not create share for cause ${causeId} - '${e.toString()}'`);
+	    }
+	} else {
+	    throw new CoreError(`Could not create share for cause ${causeId} - service response ${rawResponse.status}`);
+	}
     }
 }
+
+
+async function main() {
+    var s = newCoreService('ooo', 'localhost:10002');
+
+    try {
+        console.log(await s.getCauses());
+    } catch (e) {
+	console.log(e.toString());
+    }
+}
+
+main().then(() => { console.log('Here'); });
