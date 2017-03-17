@@ -1,7 +1,8 @@
 export const FOO: string = 'bar';
 
-import * as m from '@neoncity/common-js/marshall'
-import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, OptionalOf } from '@neoncity/common-js/marshall'
+import * as r from 'raynor'
+import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, OptionalOf } from 'raynor'
+
 import { AuthInfo, User } from '@neoncity/identity-sdk-js'
 
 
@@ -13,7 +14,7 @@ export enum CauseState {
 }
 
 
-class TitleMarshaller extends m.MaxLengthStringMarshaller {
+class TitleMarshaller extends r.MaxLengthStringMarshaller {
     constructor() {
 	super(128);
     }
@@ -30,7 +31,7 @@ class TitleMarshaller extends m.MaxLengthStringMarshaller {
 }
 
 
-class DescriptionMarshaller extends m.MaxLengthStringMarshaller {
+class DescriptionMarshaller extends r.MaxLengthStringMarshaller {
     constructor() {
 	super(10 * 1024);
     }
@@ -48,46 +49,46 @@ class DescriptionMarshaller extends m.MaxLengthStringMarshaller {
 
 
 export class Picture {
-    @MarshalWith(m.PositiveIntegerMarshaller)
+    @MarshalWith(r.PositiveIntegerMarshaller)
     position: number;
     
-    @MarshalWith(m.UriMarshaller)
+    @MarshalWith(r.UriMarshaller)
     uri: string;
 
-    @MarshalWith(m.PositiveIntegerMarshaller)
+    @MarshalWith(r.PositiveIntegerMarshaller)
     width: number;
 
-    @MarshalWith(m.PositiveIntegerMarshaller)
+    @MarshalWith(r.PositiveIntegerMarshaller)
     height: number;
 }
 
 
 export class CurrencyAmount {
-    @MarshalWith(m.PositiveIntegerMarshaller)
+    @MarshalWith(r.PositiveIntegerMarshaller)
     amount: number;
 
-    @MarshalWith(m.StringMarshaller)
+    @MarshalWith(r.StringMarshaller)
     currency: string;
 }
 
 
 export class BankInfo {
-    @MarshalWith(ArrayOf(m.StringMarshaller))
+    @MarshalWith(ArrayOf(r.StringMarshaller))
     ibans: string[];
 }
 
 
 export class Cause {
-    @MarshalWith(m.IdMarshaller)
+    @MarshalWith(r.IdMarshaller)
     id: number;
 
     @MarshalWith(MarshalEnum(CauseState))
     state: CauseState;
 
-    @MarshalWith(m.TimeMarshaller)
+    @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
-    @MarshalWith(m.TimeMarshaller)
+    @MarshalWith(r.TimeMarshaller)
     timeLastUpdated: Date;
 
     @MarshalWith(TitleMarshaller)
@@ -99,7 +100,7 @@ export class Cause {
     @MarshalWith(ArrayOf(MarshalFrom(Picture)))
     pictures: Picture[];
 
-    @MarshalWith(m.TimeMarshaller)
+    @MarshalWith(r.TimeMarshaller)
     deadline: Date;
 
     @MarshalWith(MarshalFrom(CurrencyAmount))
@@ -111,10 +112,10 @@ export class Cause {
 
 
 export class DonationForCause {
-    @MarshalWith(m.IdMarshaller)
+    @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(m.TimeMarshaller)
+    @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
     @MarshalWith(MarshalFrom(User))
@@ -126,10 +127,10 @@ export class DonationForCause {
 
 
 export class DonationForUser {
-    @MarshalWith(m.IdMarshaller)
+    @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(m.TimeMarshaller)
+    @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
     @MarshalWith(MarshalFrom(Cause))
@@ -141,10 +142,10 @@ export class DonationForUser {
 
 
 export class ShareForCause {
-    @MarshalWith(m.IdMarshaller)
+    @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(m.TimeMarshaller)
+    @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
     @MarshalWith(MarshalFrom(User))
@@ -153,10 +154,10 @@ export class ShareForCause {
 
 
 export class ShareForUser {
-    @MarshalWith(m.IdMarshaller)
+    @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(m.TimeMarshaller)
+    @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
     @MarshalWith(MarshalFrom(Cause))
@@ -198,7 +199,7 @@ export class CreateCauseRequest {
     @MarshalWith(ArrayOf(MarshalFrom(Picture)))
     pictures: Picture[];
 
-    @MarshalWith(m.TimeMarshaller)
+    @MarshalWith(r.TimeMarshaller)
     deadline: Date;
 
     @MarshalWith(MarshalFrom(CurrencyAmount))
@@ -219,7 +220,7 @@ export class UpdateCauseRequest {
     @MarshalWith(OptionalOf(ArrayOf(MarshalFrom(Picture))))
     pictures: Picture[]|null;
 
-    @MarshalWith(OptionalOf(m.TimeMarshaller))
+    @MarshalWith(OptionalOf(r.TimeMarshaller))
     deadline: Date|null;
 
     @MarshalWith(OptionalOf(MarshalFrom(CurrencyAmount)))
@@ -231,7 +232,7 @@ export class UpdateCauseRequest {
 
 
 export class CreateDonationRequest {
-    @MarshalWith(m.IdMarshaller)
+    @MarshalWith(r.IdMarshaller)
     causeId: number;
 
     @MarshalWith(MarshalFrom(CurrencyAmount))
@@ -240,7 +241,7 @@ export class CreateDonationRequest {
 
 
 export class CreateShareRequest {
-    @MarshalWith(m.IdMarshaller)
+    @MarshalWith(r.IdMarshaller)
     causeId: number;
 }
 
