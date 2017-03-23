@@ -31,7 +31,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@neoncity/common-js": "=1.0.0",
-    "@neoncity/identity-sdk-js": "=1.2.0",
+    "@neoncity/identity-sdk-js": "=1.2.1",
     "es6-promise": "=4.0.5",
     "http-status-codes": "=1.1.6",
     "isomorphic-fetch": "=2.2.1",

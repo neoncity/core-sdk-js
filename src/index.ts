@@ -253,7 +253,7 @@ export class CoreError extends Error {
 }
 
 
-export class UnauthorizedCoreError extends Error {
+export class UnauthorizedCoreError extends CoreError {
     constructor(message: string) {
         super(message);
         this.name = 'UnauthorizedCoreError';
