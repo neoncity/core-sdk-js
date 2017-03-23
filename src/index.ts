@@ -264,7 +264,7 @@ export interface UpdateCauseOptions {
 }
 
 
-export function newCoreService(auth0AccessToken: string, coreServiceHost: string) {
+export function newCoreService(coreServiceHost: string) {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest));
     const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest));
@@ -276,7 +276,6 @@ export function newCoreService(auth0AccessToken: string, coreServiceHost: string
     const userShareResponseMarshaller = new (MarshalFrom(UserShareResponse));
     
     return new CoreService(
-        auth0AccessToken,
         coreServiceHost,
         authInfoMarshaller,
 	createCauseRequestMarshaller,
@@ -347,7 +346,6 @@ export class CoreService {
 	referrer: 'client'	
     };    
     
-    private readonly _auth0AccessToken: string;
     private readonly _coreServiceHost: string;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
     private readonly _createCauseRequestMarshaller: Marshaller<CreateCauseRequest>;
@@ -360,7 +358,6 @@ export class CoreService {
     private readonly _userShareResponseMarshaller: Marshaller<UserShareResponse>;    
 
     constructor(
-        auth0AccessToken: string,
         coreServiceHost: string,
         authInfoMarshaller: Marshaller<AuthInfo>,
 	createCauseRequestMarshaller: Marshaller<CreateCauseRequest>,
@@ -371,7 +368,6 @@ export class CoreService {
 	causeResponseMarshaller: Marshaller<CauseResponse>,
 	userDonationResponseMarshaller: Marshaller<UserDonationResponse>,
 	userShareResponseMarshaller: Marshaller<UserShareResponse>) {
-        this._auth0AccessToken = auth0AccessToken;
         this._coreServiceHost = coreServiceHost;
         this._authInfoMarshaller = authInfoMarshaller;
 	this._createCauseRequestMarshaller = createCauseRequestMarshaller;
@@ -384,8 +380,8 @@ export class CoreService {
 	this._userShareResponseMarshaller = userShareResponseMarshaller;
     }
 
-    async getCauses(): Promise<Cause[]> {
-	const authInfo = new AuthInfo(this._auth0AccessToken);
+    async getCauses(accessToken: string): Promise<Cause[]> {
+	const authInfo = new AuthInfo(accessToken);
 	
         const options = (Object as any).assign({}, CoreService._getCausesOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
@@ -412,8 +408,8 @@ export class CoreService {
         }
     }
 
-    async createCause(title: string, description: string, pictures: Picture[], deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<Cause> {
-	const authInfo = new AuthInfo(this._auth0AccessToken);
+    async createCause(accessToken: string, title: string, description: string, pictures: Picture[], deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<Cause> {
+	const authInfo = new AuthInfo(accessToken);
 	const createCauseRequest = new CreateCauseRequest();
 	createCauseRequest.title = title;
 	createCauseRequest.description = description;
@@ -448,8 +444,8 @@ export class CoreService {
 	}
     }
 
-    async getCause(causeId: number): Promise<Cause> {
-	const authInfo = new AuthInfo(this._auth0AccessToken);
+    async getCause(accessToken: string, causeId: number): Promise<Cause> {
+	const authInfo = new AuthInfo(accessToken);
 
 	const options = (Object as any).assign({}, CoreService._getCauseOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
@@ -476,8 +472,8 @@ export class CoreService {
 	}
     }
 
-    async updateCause(causeId: number, updateOptions: UpdateCauseOptions): Promise<Cause> {
-	const authInfo = new AuthInfo(this._auth0AccessToken);
+    async updateCause(accessToken: string, causeId: number, updateOptions: UpdateCauseOptions): Promise<Cause> {
+	const authInfo = new AuthInfo(accessToken);
 	const updateCauseRequest = new UpdateCauseRequest();
 
 	// Hackety-hack-hack.
@@ -511,8 +507,8 @@ export class CoreService {
 	}
     }
 
-    async deleteCause(causeId: number): Promise<void> {
-	const authInfo = new AuthInfo(this._auth0AccessToken);
+    async deleteCause(accessToken: string, causeId: number): Promise<void> {
+	const authInfo = new AuthInfo(accessToken);
 
 	const options = (Object as any).assign({}, CoreService._deleteCauseOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
@@ -530,8 +526,8 @@ export class CoreService {
 	}
     }
 
-    async createDonation(causeId: number, amount: CurrencyAmount): Promise<DonationForUser> {
-	const authInfo = new AuthInfo(this._auth0AccessToken);
+    async createDonation(accessToken: string, causeId: number, amount: CurrencyAmount): Promise<DonationForUser> {
+	const authInfo = new AuthInfo(accessToken);
 	const createDonationRequest = new CreateDonationRequest();
 	createDonationRequest.amount = amount;
 
@@ -561,8 +557,8 @@ export class CoreService {
 	}
     }
 
-    async createShare(causeId: number): Promise<ShareForUser> {
-	const authInfo = new AuthInfo(this._auth0AccessToken);
+    async createShare(accessToken: string, causeId: number): Promise<ShareForUser> {
+	const authInfo = new AuthInfo(accessToken);
 	const createShareRequest = new CreateShareRequest();
 
         const options = (Object as any).assign({}, CoreService._createShareOptions, {
@@ -591,16 +587,3 @@ export class CoreService {
 	}
     }
 }
-
-
-async function main() {
-    var s = newCoreService('ooo', 'localhost:10002');
-
-    try {
-        console.log(await s.getCauses());
-    } catch (e) {
-	console.log(e.toString());
-    }
-}
-
-main().then(() => { console.log('Here'); });
