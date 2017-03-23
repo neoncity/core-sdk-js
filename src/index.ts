@@ -1,5 +1,4 @@
-export const FOO: string = 'bar';
-
+import * as HttpStatus from 'http-status-codes'
 import * as r from 'raynor'
 import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, OptionalOf } from 'raynor'
 
@@ -254,6 +253,14 @@ export class CoreError extends Error {
 }
 
 
+export class UnauthorizedCoreError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'UnauthorizedCoreError';
+    }
+}
+
+
 export interface UpdateCauseOptions {
     title?: string;
     description?: string;
@@ -403,7 +410,9 @@ export class CoreService {
             } catch (e) {
                 throw new CoreError(`Could not retrieve causes - '${e.toString()}'`);
             }
-        } else {
+        } else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
+	} else {
             throw new CoreError(`Could not retrieve causes - service response ${rawResponse.status}`);
         }
     }
@@ -439,6 +448,8 @@ export class CoreService {
 	    } catch (e) {
 		throw new CoreError(`Chould not retrieve cause - '${e.toString()}'`);
 	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
 	} else {
 	    throw new CoreError(`Could not retrieve cause - service response ${rawResponse.status}`);
 	}
@@ -467,6 +478,8 @@ export class CoreService {
 	    } catch (e) {
 		throw new CoreError(`Could not retrieve cause ${causeId} - '${e.toString()}'`);
 	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
 	} else {
 	    throw new CoreError(`Could not retrieve cause ${causeId} - service response ${rawResponse.status}`);
 	}
@@ -502,6 +515,8 @@ export class CoreService {
 	    } catch (e) {
 		throw new CoreError(`Chould not update cause ${causeId} - '${e.toString()}'`);
 	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
 	} else {
 	    throw new CoreError(`Could not update cause ${causeId} - service response ${rawResponse.status}`);
 	}
@@ -521,9 +536,13 @@ export class CoreService {
 	    throw new CoreError(`Could not delete cause ${causeId} - request failed because '${e.toString()}'`);
 	}
 
-	if (!rawResponse.ok) {
+	if (rawResponse.ok) {
+	    // Do nothing
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
+	} else {
 	    throw new CoreError(`Could not delete cause ${causeId} - service response ${rawResponse.status}`);
-	}
+	} 
     }
 
     async createDonation(accessToken: string, causeId: number, amount: CurrencyAmount): Promise<DonationForUser> {
@@ -552,6 +571,8 @@ export class CoreService {
 	    } catch (e) {
 		throw new CoreError(`Chould not create donation for cause ${causeId} - '${e.toString()}'`);
 	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
 	} else {
 	    throw new CoreError(`Could not create donation for cause ${causeId} - service response ${rawResponse.status}`);
 	}
@@ -582,6 +603,8 @@ export class CoreService {
 	    } catch (e) {
 		throw new CoreError(`Chould not create share for cause ${causeId} - '${e.toString()}'`);
 	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
 	} else {
 	    throw new CoreError(`Could not create share for cause ${causeId} - service response ${rawResponse.status}`);
 	}
