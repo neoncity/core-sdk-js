@@ -1,6 +1,6 @@
 {
   "name": "@neoncity/core-sdk-js",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "The SDK for the core service.",
   "author": "NeonCity team",
   "scripts": {
@@ -31,7 +31,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@neoncity/common-js": "=1.0.0",
-    "@neoncity/identity-sdk-js": "=1.1.0",
+    "@neoncity/identity-sdk-js": "=1.2.0",
     "es6-promise": "=4.0.5",
     "http-status-codes": "=1.1.6",
     "isomorphic-fetch": "=2.2.1",
