@@ -105,8 +105,8 @@ export class Cause {
     @MarshalWith(MarshalFrom(CurrencyAmount))
     goal: CurrencyAmount;
 
-    @MarshalWith(MarshalFrom(BankInfo))
-    bankInfo: BankInfo;
+    @MarshalWith(OptionalOf(MarshalFrom(BankInfo)))
+    bankInfo: BankInfo|null;
 }
 
 
