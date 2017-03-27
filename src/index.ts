@@ -104,9 +104,16 @@ export class Cause {
 
     @MarshalWith(MarshalFrom(CurrencyAmount))
     goal: CurrencyAmount;
+}
 
-    @MarshalWith(OptionalOf(MarshalFrom(BankInfo)))
-    bankInfo: BankInfo|null;
+
+export class PublicCause extends Cause {
+}
+
+
+export class PrivateCause extends Cause {
+    @MarshalWith(MarshalFrom(BankInfo))
+    bankInfo: BankInfo;
 }
 
 
@@ -132,8 +139,8 @@ export class DonationForUser {
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
-    @MarshalWith(MarshalFrom(Cause))
-    forCause: Cause;
+    @MarshalWith(MarshalFrom(PublicCause))
+    forCause: PublicCause;
 
     @MarshalWith(MarshalFrom(CurrencyAmount))
     amount: CurrencyAmount;
@@ -159,20 +166,26 @@ export class ShareForUser {
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
-    @MarshalWith(MarshalFrom(Cause))
-    forCause: Cause;
+    @MarshalWith(MarshalFrom(PublicCause))
+    forCause: PublicCause;
 }
 
 
-export class CausesResponse {
-    @MarshalWith(ArrayOf(MarshalFrom(Cause)))
-    causes: Cause[];
+export class PublicCausesResponse {
+    @MarshalWith(ArrayOf(MarshalFrom(PublicCause)))
+    causes: PublicCause[];
 }
 
 
-export class CauseResponse {
-    @MarshalWith(MarshalFrom(Cause))
-    cause: Cause;
+export class PublicCauseResponse {
+    @MarshalWith(MarshalFrom(PublicCause))
+    cause: PublicCause;
+}
+
+
+export class PrivateCauseResponse {
+    @MarshalWith(MarshalFrom(PrivateCause))
+    cause: PrivateCause;
 }
 
 
@@ -266,33 +279,29 @@ export interface UpdateCauseOptions {
 }
 
 
-export function newCoreService(coreServiceHost: string) {
+export function newCorePublicClient(coreServiceHost: string) {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
-    const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest));
-    const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest));
     const createDonationRequestMarshaller = new (MarshalFrom(CreateDonationRequest));
     const createShareRequestMarshaller = new (MarshalFrom(CreateShareRequest));
-    const causesResponseMarshaller = new (MarshalFrom(CausesResponse));
-    const causeResponseMarshaller = new (MarshalFrom(CauseResponse));
+    const publicCausesResponseMarshaller = new (MarshalFrom(PublicCausesResponse));
+    const publicCauseResponseMarshaller = new (MarshalFrom(PublicCauseResponse));
     const userDonationResponseMarshaller = new (MarshalFrom(UserDonationResponse));
     const userShareResponseMarshaller = new (MarshalFrom(UserShareResponse));
     
-    return new CoreService(
+    return new CorePublicClient(
         coreServiceHost,
         authInfoMarshaller,
-	createCauseRequestMarshaller,
-	updateCauseRequestMarshaller,
 	createDonationRequestMarshaller,
 	createShareRequestMarshaller,
-        causesResponseMarshaller,
-	causeResponseMarshaller,
+        publicCausesResponseMarshaller,
+	publicCauseResponseMarshaller,
 	userDonationResponseMarshaller,
 	userShareResponseMarshaller);
 }
 
 
-export class CoreService {
-    private static readonly _getCausesOptions: RequestInit = {
+export class CorePublicClient {
+    private static readonly _getPublicCausesOptions: RequestInit = {
 	method: 'GET',
 	mode: 'cors',
 	cache: 'no-cache',
@@ -300,6 +309,207 @@ export class CoreService {
 	referrer: 'client'
     };
 
+    private static readonly _getPublicCauseOptions: RequestInit = {
+	method: 'GET',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'
+    };
+
+    private static readonly _createDonationOptions: RequestInit = {
+	method: 'POST',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'	
+    };
+
+    private static readonly _createShareOptions: RequestInit = {
+	method: 'POST',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'	
+    };
+    
+    private readonly _coreServiceHost: string;
+    private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
+    private readonly _createDonationRequestMarshaller: Marshaller<CreateDonationRequest>;
+    private readonly _createShareRequestMarshaller: Marshaller<CreateShareRequest>;
+    private readonly _publicCausesResponseMarshaller: Marshaller<PublicCausesResponse>;
+    private readonly _publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>;
+    private readonly _userDonationResponseMarshaller: Marshaller<UserDonationResponse>;
+    private readonly _userShareResponseMarshaller: Marshaller<UserShareResponse>;    
+    
+    constructor(
+	coreServiceHost: string,
+	authInfoMarshaller: Marshaller<AuthInfo>,
+	createDonationRequestMarshaller: Marshaller<CreateDonationRequest>,
+	createShareRequestMarshaller: Marshaller<CreateShareRequest>,
+        publicCausesResponseMarshaller: Marshaller<PublicCausesResponse>,
+	publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>,
+	userDonationResponseMarshaller: Marshaller<UserDonationResponse>,
+	userShareResponseMarshaller: Marshaller<UserShareResponse>) {
+	this._coreServiceHost = coreServiceHost;
+	this._authInfoMarshaller = authInfoMarshaller;
+	this._createDonationRequestMarshaller = createDonationRequestMarshaller;
+	this._createShareRequestMarshaller = createShareRequestMarshaller;
+        this._publicCausesResponseMarshaller = publicCausesResponseMarshaller;
+	this._publicCauseResponseMarshaller = publicCauseResponseMarshaller;
+	this._userDonationResponseMarshaller = userDonationResponseMarshaller;
+	this._userShareResponseMarshaller = userShareResponseMarshaller;
+    }
+    
+    async getCauses(accessToken: string|null): Promise<PublicCause[]> {
+	let options: RequestInit = CorePublicClient._getPublicCausesOptions;
+	if (accessToken != null) {
+	    const authInfo = new AuthInfo(accessToken);
+	
+            options = (Object as any).assign({}, CorePublicClient._getPublicCausesOptions, {
+		headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	    });
+	}
+
+        let rawResponse: Response;
+        try {
+            rawResponse = await fetch(`http://${this._coreServiceHost}/causes/public`, options);
+        } catch (e) {
+            throw new CoreError(`Could not retrieve causes - request failed because '${e.toString()}'`);
+        }
+
+        if (rawResponse.ok) {
+            try {
+                const jsonResponse = await rawResponse.json();
+                const publicCausesResponse = this._publicCausesResponseMarshaller.extract(jsonResponse);
+
+                return publicCausesResponse.causes;
+            } catch (e) {
+                throw new CoreError(`Could not retrieve causes - '${e.toString()}'`);
+            }
+        } else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
+	} else {
+            throw new CoreError(`Could not retrieve causes - service response ${rawResponse.status}`);
+        }	
+    }
+
+    async getCause(accessToken: string|null, causeId: number): Promise<PublicCause> {
+	let options: RequestInit = CorePublicClient._getPublicCauseOptions;
+	if (accessToken != null) {
+	    const authInfo = new AuthInfo(accessToken);
+	
+            options = (Object as any).assign({}, CorePublicClient._getPublicCauseOptions, {
+		headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	    });
+	}
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/public/${causeId}`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not retrieve cause ${causeId} - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const publicCauseResponse = this._publicCauseResponseMarshaller.extract(jsonResponse);
+
+		return publicCauseResponse.cause;
+	    } catch (e) {
+		throw new CoreError(`Could not retrieve cause ${causeId} - '${e.toString()}'`);
+	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
+	} else {
+	    throw new CoreError(`Could not retrieve cause ${causeId} - service response ${rawResponse.status}`);
+	}
+    }
+
+    async createDonation(accessToken: string, causeId: number, amount: CurrencyAmount): Promise<DonationForUser> {
+	const authInfo = new AuthInfo(accessToken);
+	const createDonationRequest = new CreateDonationRequest();
+	createDonationRequest.amount = amount;
+
+        const options = (Object as any).assign({}, CorePublicClient._createDonationOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    body: JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest))
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/public/${causeId}/donations`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not create donation for cause ${causeId} - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const userDonationResponse = this._userDonationResponseMarshaller.extract(jsonResponse);
+
+		return userDonationResponse.donation;
+	    } catch (e) {
+		throw new CoreError(`Chould not create donation for cause ${causeId} - '${e.toString()}'`);
+	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
+	} else {
+	    throw new CoreError(`Could not create donation for cause ${causeId} - service response ${rawResponse.status}`);
+	}	
+    }
+
+    async createShare(accessToken: string, causeId: number): Promise<ShareForUser> {
+	const authInfo = new AuthInfo(accessToken);
+	const createShareRequest = new CreateShareRequest();
+
+        const options = (Object as any).assign({}, CorePublicClient._createShareOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    body: JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest))
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/public/${causeId}/shares`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not create share for cause ${causeId} - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const userShareResponse = this._userShareResponseMarshaller.extract(jsonResponse);
+
+		return userShareResponse.share;
+	    } catch (e) {
+		throw new CoreError(`Chould not create share for cause ${causeId} - '${e.toString()}'`);
+	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
+	} else {
+	    throw new CoreError(`Could not create share for cause ${causeId} - service response ${rawResponse.status}`);
+	}	
+    }
+}
+
+
+export function newCorePrivaeClient(coreServiceHost: string) {
+    const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
+    const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest));
+    const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest));
+    const privateCauseResponseMarshaller = new (MarshalFrom(PrivateCauseResponse));
+    
+    return new CorePrivateClient(
+        coreServiceHost,
+        authInfoMarshaller,
+	createCauseRequestMarshaller,
+	updateCauseRequestMarshaller,
+	privateCauseResponseMarshaller);
+}
+
+
+export class CorePrivateClient {
     private static readonly _createCauseOptions: RequestInit = {
 	method: 'POST',
 	mode: 'cors',
@@ -330,89 +540,28 @@ export class CoreService {
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client'
-    };
-
-    private static readonly _createDonationOptions: RequestInit = {
-	method: 'POST',
-	mode: 'cors',
-	cache: 'no-cache',
-	redirect: 'error',
-	referrer: 'client'	
-    };
-
-    private static readonly _createShareOptions: RequestInit = {
-	method: 'POST',
-	mode: 'cors',
-	cache: 'no-cache',
-	redirect: 'error',
-	referrer: 'client'	
     };    
     
     private readonly _coreServiceHost: string;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
     private readonly _createCauseRequestMarshaller: Marshaller<CreateCauseRequest>;
     private readonly _updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>;
-    private readonly _createDonationRequestMarshaller: Marshaller<CreateDonationRequest>;
-    private readonly _createShareRequestMarshaller: Marshaller<CreateShareRequest>;
-    private readonly _causesResponseMarshaller: Marshaller<CausesResponse>;
-    private readonly _causeResponseMarshaller: Marshaller<CauseResponse>;
-    private readonly _userDonationResponseMarshaller: Marshaller<UserDonationResponse>;
-    private readonly _userShareResponseMarshaller: Marshaller<UserShareResponse>;    
+    private readonly _privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>;
 
     constructor(
         coreServiceHost: string,
         authInfoMarshaller: Marshaller<AuthInfo>,
 	createCauseRequestMarshaller: Marshaller<CreateCauseRequest>,
 	updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>,
-	createDonationRequestMarshaller: Marshaller<CreateDonationRequest>,
-	createShareRequestMarshaller: Marshaller<CreateShareRequest>,
-        causesResponseMarshaller: Marshaller<CausesResponse>,
-	causeResponseMarshaller: Marshaller<CauseResponse>,
-	userDonationResponseMarshaller: Marshaller<UserDonationResponse>,
-	userShareResponseMarshaller: Marshaller<UserShareResponse>) {
+	privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>) {
         this._coreServiceHost = coreServiceHost;
         this._authInfoMarshaller = authInfoMarshaller;
 	this._createCauseRequestMarshaller = createCauseRequestMarshaller;
 	this._updateCauseRequestMarshaller = updateCauseRequestMarshaller;
-	this._createDonationRequestMarshaller = createDonationRequestMarshaller;
-	this._createShareRequestMarshaller = createShareRequestMarshaller;
-        this._causesResponseMarshaller = causesResponseMarshaller;
-	this._causeResponseMarshaller = causeResponseMarshaller;
-	this._userDonationResponseMarshaller = userDonationResponseMarshaller;
-	this._userShareResponseMarshaller = userShareResponseMarshaller;
+	this._privateCauseResponseMarshaller = privateCauseResponseMarshaller;
     }
 
-    async getCauses(accessToken: string): Promise<Cause[]> {
-	const authInfo = new AuthInfo(accessToken);
-	
-        const options = (Object as any).assign({}, CoreService._getCausesOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
-	});
-
-        let rawResponse: Response;
-        try {
-            rawResponse = await fetch(`http://${this._coreServiceHost}/causes`, options);
-        } catch (e) {
-            throw new CoreError(`Could not retrieve causes - request failed because '${e.toString()}'`);
-        }
-
-        if (rawResponse.ok) {
-            try {
-                const jsonResponse = await rawResponse.json();
-                const causesResponse = this._causesResponseMarshaller.extract(jsonResponse);
-
-                return causesResponse.causes;
-            } catch (e) {
-                throw new CoreError(`Could not retrieve causes - '${e.toString()}'`);
-            }
-        } else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
-	    throw new UnauthorizedCoreError('User is not authorized');
-	} else {
-            throw new CoreError(`Could not retrieve causes - service response ${rawResponse.status}`);
-        }
-    }
-
-    async createCause(accessToken: string, title: string, description: string, pictures: Picture[], deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<Cause> {
+    async createCause(accessToken: string, title: string, description: string, pictures: Picture[], deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
 	const authInfo = new AuthInfo(accessToken);
 	const createCauseRequest = new CreateCauseRequest();
 	createCauseRequest.title = title;
@@ -422,14 +571,14 @@ export class CoreService {
 	createCauseRequest.goal = goal;
 	createCauseRequest.bankInfo = bankInfo;
 
-        const options = (Object as any).assign({}, CoreService._createCauseOptions, {
+        const options = (Object as any).assign({}, CorePrivateClient._createCauseOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
 	    body: JSON.stringify(this._createCauseRequestMarshaller.pack(createCauseRequest))
 	});
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/private`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create cause - request failed because '${e.toString()}'`);
 	}
@@ -437,9 +586,9 @@ export class CoreService {
 	if (rawResponse.ok) {
 	    try {
 		const jsonResponse = await rawResponse.json();
-		const causeResponse = this._causeResponseMarshaller.extract(jsonResponse);
+		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 
-		return causeResponse.cause;
+		return privateCauseResponse.cause;
 	    } catch (e) {
 		throw new CoreError(`Chould not retrieve cause - '${e.toString()}'`);
 	    }
@@ -450,16 +599,16 @@ export class CoreService {
 	}
     }
 
-    async getCause(accessToken: string, causeId: number): Promise<Cause> {
+    async getCause(accessToken: string, causeId: number): Promise<PrivateCause> {
 	const authInfo = new AuthInfo(accessToken);
 
-	const options = (Object as any).assign({}, CoreService._getCauseOptions, {
+	const options = (Object as any).assign({}, CorePrivateClient._getCauseOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
 	});
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/private/${causeId}`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -467,9 +616,9 @@ export class CoreService {
 	if (rawResponse.ok) {
 	    try {
 		const jsonResponse = await rawResponse.json();
-		const causeResponse = this._causeResponseMarshaller.extract(jsonResponse);
+		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 
-		return causeResponse.cause;
+		return privateCauseResponse.cause;
 	    } catch (e) {
 		throw new CoreError(`Could not retrieve cause ${causeId} - '${e.toString()}'`);
 	    }
@@ -489,14 +638,14 @@ export class CoreService {
 	    (updateCauseRequest as any)[key] = (updateOptions as any)[key];
 	}
 
-	const options = (Object as any).assign({}, CoreService._updateCauseOptions, {
+	const options = (Object as any).assign({}, CorePrivateClient._updateCauseOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
 	    body: JSON.stringify(this._updateCauseRequestMarshaller.pack(updateCauseRequest))
 	});
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/private/${causeId}`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not update cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -504,9 +653,9 @@ export class CoreService {
 	if (rawResponse.ok) {
 	    try {
 		const jsonResponse = await rawResponse.json();
-		const causeResponse = this._causeResponseMarshaller.extract(jsonResponse);
+		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 
-		return causeResponse.cause;
+		return privateCauseResponse.cause;
 	    } catch (e) {
 		throw new CoreError(`Chould not update cause ${causeId} - '${e.toString()}'`);
 	    }
@@ -520,13 +669,13 @@ export class CoreService {
     async deleteCause(accessToken: string, causeId: number): Promise<void> {
 	const authInfo = new AuthInfo(accessToken);
 
-	const options = (Object as any).assign({}, CoreService._deleteCauseOptions, {
+	const options = (Object as any).assign({}, CorePrivateClient._deleteCauseOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
 	});
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/private/${causeId}`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not delete cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -538,70 +687,5 @@ export class CoreService {
 	} else {
 	    throw new CoreError(`Could not delete cause ${causeId} - service response ${rawResponse.status}`);
 	} 
-    }
-
-    async createDonation(accessToken: string, causeId: number, amount: CurrencyAmount): Promise<DonationForUser> {
-	const authInfo = new AuthInfo(accessToken);
-	const createDonationRequest = new CreateDonationRequest();
-	createDonationRequest.amount = amount;
-
-        const options = (Object as any).assign({}, CoreService._createDonationOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
-	    body: JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest))
-	});
-
-	let rawResponse: Response;
-	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}/donations`, options);
-	} catch (e) {
-	    throw new CoreError(`Could not create donation for cause ${causeId} - request failed because '${e.toString()}'`);
-	}
-
-	if (rawResponse.ok) {
-	    try {
-		const jsonResponse = await rawResponse.json();
-		const userDonationResponse = this._userDonationResponseMarshaller.extract(jsonResponse);
-
-		return userDonationResponse.donation;
-	    } catch (e) {
-		throw new CoreError(`Chould not create donation for cause ${causeId} - '${e.toString()}'`);
-	    }
-	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
-	    throw new UnauthorizedCoreError('User is not authorized');
-	} else {
-	    throw new CoreError(`Could not create donation for cause ${causeId} - service response ${rawResponse.status}`);
-	}
-    }
-
-    async createShare(accessToken: string, causeId: number): Promise<ShareForUser> {
-	const authInfo = new AuthInfo(accessToken);
-	const createShareRequest = new CreateShareRequest();
-
-        const options = (Object as any).assign({}, CoreService._createShareOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
-	    body: JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest))
-	});
-
-	let rawResponse: Response;
-	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/${causeId}/shares`, options);
-	} catch (e) {
-	    throw new CoreError(`Could not create share for cause ${causeId} - request failed because '${e.toString()}'`);
-	}
-
-	if (rawResponse.ok) {
-	    try {
-		const jsonResponse = await rawResponse.json();
-		const userShareResponse = this._userShareResponseMarshaller.extract(jsonResponse);
-
-		return userShareResponse.share;
-	    } catch (e) {
-		throw new CoreError(`Chould not create share for cause ${causeId} - '${e.toString()}'`);
-	    }
-	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
-	    throw new UnauthorizedCoreError('User is not authorized');
-	} else {
-	    throw new CoreError(`Could not create share for cause ${causeId} - service response ${rawResponse.status}`);
-	}
     }
 }
