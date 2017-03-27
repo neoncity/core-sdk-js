@@ -1,6 +1,6 @@
 {
   "name": "@neoncity/core-sdk-js",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "The SDK for the core service.",
   "author": "NeonCity team",
   "scripts": {
@@ -31,11 +31,11 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@neoncity/common-js": "=1.0.0",
-    "@neoncity/identity-sdk-js": "=1.2.1",
+    "@neoncity/identity-sdk-js": "=1.2.2",
     "es6-promise": "=4.0.5",
     "http-status-codes": "=1.1.6",
     "isomorphic-fetch": "=2.2.1",
-    "raynor": "=0.1.2"
+    "raynor": "=0.2.0"
   },
   "devDependencies": {
     "@neoncity/togemfury": "=0.0.9",
