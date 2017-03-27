@@ -231,17 +231,12 @@ export class UpdateCauseRequest {
 
 
 export class CreateDonationRequest {
-    @MarshalWith(r.IdMarshaller)
-    causeId: number;
-
     @MarshalWith(MarshalFrom(CurrencyAmount))
     amount: CurrencyAmount;
 }
 
 
 export class CreateShareRequest {
-    @MarshalWith(r.IdMarshaller)
-    causeId: number;
 }
 
 
