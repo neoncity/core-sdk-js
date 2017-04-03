@@ -90,7 +90,7 @@ export class Cause {
     @MarshalWith(r.TimeMarshaller)
     timeLastUpdated: Date;
 
-    @MarshalWith(r.MaxLengthStringMarshaller(100))
+    @MarshalWith(r.SlugMarshaller)
     slug: string;
 
     @MarshalWith(TitleMarshaller)
