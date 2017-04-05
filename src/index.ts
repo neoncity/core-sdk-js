@@ -497,7 +497,7 @@ export class CorePublicClient {
 }
 
 
-export function newCorePrivaeClient(coreServiceHost: string) {
+export function newCorePrivateClient(coreServiceHost: string) {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest));
     const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest));
