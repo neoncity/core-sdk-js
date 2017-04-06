@@ -174,6 +174,15 @@ export class ShareForUser {
 }
 
 
+export class UserActionsOverview {
+    @MarshalWith(ArrayOf(MarshalFrom(DonationForUser)))
+    donations: DonationForUser[];
+
+    @MarshalWith(ArrayOf(MarshalFrom(ShareForUser)))
+    shares: ShareForUser[];    
+}
+
+
 export class PublicCausesResponse {
     @MarshalWith(ArrayOf(MarshalFrom(PublicCause)))
     causes: PublicCause[];
@@ -183,6 +192,16 @@ export class PublicCausesResponse {
 export class PublicCauseResponse {
     @MarshalWith(MarshalFrom(PublicCause))
     cause: PublicCause;
+}
+
+
+export class CreateDonationRequest {
+    @MarshalWith(MarshalFrom(CurrencyAmount))
+    amount: CurrencyAmount;
+}
+
+
+export class CreateShareRequest {
 }
 
 
@@ -246,13 +265,9 @@ export class UpdateCauseRequest {
 }
 
 
-export class CreateDonationRequest {
-    @MarshalWith(MarshalFrom(CurrencyAmount))
-    amount: CurrencyAmount;
-}
-
-
-export class CreateShareRequest {
+export class ActionsOverviewResponse {
+    @MarshalWith(MarshalFrom(UserActionsOverview))
+    actionsOverview: UserActionsOverview;
 }
 
 
@@ -376,7 +391,7 @@ export class CorePublicClient {
 
         let rawResponse: Response;
         try {
-            rawResponse = await fetch(`http://${this._coreServiceHost}/causes/public`, options);
+            rawResponse = await fetch(`http://${this._coreServiceHost}/public/causes`, options);
         } catch (e) {
             throw new CoreError(`Could not retrieve causes - request failed because '${e.toString()}'`);
         }
@@ -409,7 +424,7 @@ export class CorePublicClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/public/${causeId}`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/public/causes/${causeId}`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -442,7 +457,7 @@ export class CorePublicClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/public/${causeId}/donations`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/public/causes/${causeId}/donations`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create donation for cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -474,7 +489,7 @@ export class CorePublicClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/public/${causeId}/shares`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/public/causes/${causeId}/shares`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create share for cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -499,16 +514,18 @@ export class CorePublicClient {
 
 export function newCorePrivateClient(coreServiceHost: string) {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
-    const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest));
-    const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest));
-    const privateCauseResponseMarshaller = new (MarshalFrom(PrivateCauseResponse));
+    const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest))();
+    const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest))();
+    const privateCauseResponseMarshaller = new (MarshalFrom(PrivateCauseResponse))();
+    const actionsOverviewResponseMarshaller = new (MarshalFrom(ActionsOverviewResponse))();
     
     return new CorePrivateClient(
         coreServiceHost,
         authInfoMarshaller,
 	createCauseRequestMarshaller,
 	updateCauseRequestMarshaller,
-	privateCauseResponseMarshaller);
+	privateCauseResponseMarshaller,
+	actionsOverviewResponseMarshaller);
 }
 
 
@@ -543,25 +560,36 @@ export class CorePrivateClient {
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client'
-    };    
+    };
+
+    private static readonly _getActionsOverviewOptions: RequestInit = {
+	method: 'GET',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'
+    };
     
     private readonly _coreServiceHost: string;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
     private readonly _createCauseRequestMarshaller: Marshaller<CreateCauseRequest>;
     private readonly _updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>;
     private readonly _privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>;
+    private readonly _actionsOverviewResponseMarshaller: Marshaller<ActionsOverviewResponse>;
 
     constructor(
         coreServiceHost: string,
         authInfoMarshaller: Marshaller<AuthInfo>,
 	createCauseRequestMarshaller: Marshaller<CreateCauseRequest>,
 	updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>,
-	privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>) {
+	privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>,
+	actionsOverviewResponseMarshaller: Marshaller<ActionsOverviewResponse>) {
         this._coreServiceHost = coreServiceHost;
         this._authInfoMarshaller = authInfoMarshaller;
 	this._createCauseRequestMarshaller = createCauseRequestMarshaller;
 	this._updateCauseRequestMarshaller = updateCauseRequestMarshaller;
 	this._privateCauseResponseMarshaller = privateCauseResponseMarshaller;
+	this._actionsOverviewResponseMarshaller = actionsOverviewResponseMarshaller;
     }
 
     async createCause(accessToken: string, title: string, description: string, pictures: Picture[], deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
@@ -581,7 +609,7 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/private`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create cause - request failed because '${e.toString()}'`);
 	}
@@ -602,7 +630,7 @@ export class CorePrivateClient {
 	}
     }
 
-    async getCause(accessToken: string, causeId: number): Promise<PrivateCause> {
+    async getCause(accessToken: string): Promise<PrivateCause> {
 	const authInfo = new AuthInfo(accessToken);
 
 	const options = (Object as any).assign({}, CorePrivateClient._getCauseOptions, {
@@ -611,9 +639,9 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/private/${causeId}`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
-	    throw new CoreError(`Could not retrieve cause ${causeId} - request failed because '${e.toString()}'`);
+	    throw new CoreError(`Could not retrieve cause - request failed because '${e.toString()}'`);
 	}
 
 	if (rawResponse.ok) {
@@ -623,16 +651,16 @@ export class CorePrivateClient {
 
 		return privateCauseResponse.cause;
 	    } catch (e) {
-		throw new CoreError(`Could not retrieve cause ${causeId} - '${e.toString()}'`);
+		throw new CoreError(`Could not retrieve cause - '${e.toString()}'`);
 	    }
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
 	} else {
-	    throw new CoreError(`Could not retrieve cause ${causeId} - service response ${rawResponse.status}`);
+	    throw new CoreError(`Could not retrieve cause - service response ${rawResponse.status}`);
 	}
     }
 
-    async updateCause(accessToken: string, causeId: number, updateOptions: UpdateCauseOptions): Promise<Cause> {
+    async updateCause(accessToken: string, updateOptions: UpdateCauseOptions): Promise<Cause> {
 	const authInfo = new AuthInfo(accessToken);
 	const updateCauseRequest = new UpdateCauseRequest();
 
@@ -648,9 +676,9 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/private/${causeId}`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
-	    throw new CoreError(`Could not update cause ${causeId} - request failed because '${e.toString()}'`);
+	    throw new CoreError(`Could not update cause - request failed because '${e.toString()}'`);
 	}
 
 	if (rawResponse.ok) {
@@ -660,16 +688,16 @@ export class CorePrivateClient {
 
 		return privateCauseResponse.cause;
 	    } catch (e) {
-		throw new CoreError(`Chould not update cause ${causeId} - '${e.toString()}'`);
+		throw new CoreError(`Chould not update cause - '${e.toString()}'`);
 	    }
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
 	} else {
-	    throw new CoreError(`Could not update cause ${causeId} - service response ${rawResponse.status}`);
+	    throw new CoreError(`Could not update cause - service response ${rawResponse.status}`);
 	}
     }
 
-    async deleteCause(accessToken: string, causeId: number): Promise<void> {
+    async deleteCause(accessToken: string): Promise<void> {
 	const authInfo = new AuthInfo(accessToken);
 
 	const options = (Object as any).assign({}, CorePrivateClient._deleteCauseOptions, {
@@ -678,9 +706,9 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/causes/private/${causeId}`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
-	    throw new CoreError(`Could not delete cause ${causeId} - request failed because '${e.toString()}'`);
+	    throw new CoreError(`Could not delete cause - request failed because '${e.toString()}'`);
 	}
 
 	if (rawResponse.ok) {
@@ -688,7 +716,37 @@ export class CorePrivateClient {
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
 	} else {
-	    throw new CoreError(`Could not delete cause ${causeId} - service response ${rawResponse.status}`);
+	    throw new CoreError(`Could not delete cause - service response ${rawResponse.status}`);
 	} 
+    }
+
+    async getActionsOverview(accessToken: string): Promise<UserActionsOverview> {
+	const authInfo = new AuthInfo(accessToken);
+
+	const options = (Object as any).assign({}, CorePrivateClient._getActionsOverviewOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/actions-overview`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not retrieve actions overview - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const actionsOverviewResponse = this._actionsOverviewResponseMarshaller.extract(jsonResponse);
+
+		return actionsOverviewResponse.actionsOverview;
+	    } catch (e) {
+		throw new CoreError(`Could not retrieve actions overview - '${e.toString()}'`);
+	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
+	} else {
+	    throw new CoreError(`Could not retrieve actions overview - service response ${rawResponse.status}`);
+	}	
     }
 }
