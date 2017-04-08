@@ -287,6 +287,14 @@ export class UnauthorizedCoreError extends CoreError {
 }
 
 
+export class NoCauseForUserError extends CoreError {
+    constructor(message: string) {
+        super(message);
+        this.name = 'NoCauseForUserError';
+    }
+}
+
+
 export interface UpdateCauseOptions {
     title?: string;
     description?: string;
@@ -655,6 +663,8 @@ export class CorePrivateClient {
 	    }
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
+        } else if (rawResponse.status == HttpStatus.NOT_FOUND) {
+            throw new NoCauseForUserError('User does not have a cause');
 	} else {
 	    throw new CoreError(`Could not retrieve cause - service response ${rawResponse.status}`);
 	}
