@@ -679,7 +679,7 @@ export class CorePrivateClient {
 	}
     }
 
-    async updateCause(accessToken: string, updateOptions: UpdateCauseOptions): Promise<Cause> {
+    async updateCause(accessToken: string, updateOptions: UpdateCauseOptions): Promise<PrivateCause> {
 	const authInfo = new AuthInfo(accessToken);
 	const updateCauseRequest = new UpdateCauseRequest();
 
