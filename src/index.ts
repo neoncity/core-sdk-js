@@ -459,7 +459,10 @@ export class CorePublicClient {
 	createDonationRequest.amount = amount;
 
         const options = (Object as any).assign({}, CorePublicClient._createDonationOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    headers: {
+		'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo)),
+		'Content-Type': 'application/json'
+	    },
 	    body: JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest))
 	});
 
@@ -491,7 +494,10 @@ export class CorePublicClient {
 	const createShareRequest = new CreateShareRequest();
 
         const options = (Object as any).assign({}, CorePublicClient._createShareOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    headers: {
+		'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo)),
+		'Content-Type': 'application/json'
+	    },
 	    body: JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest))
 	});
 
@@ -611,7 +617,10 @@ export class CorePrivateClient {
 	createCauseRequest.bankInfo = bankInfo;
 
         const options = (Object as any).assign({}, CorePrivateClient._createCauseOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    headers: {
+		'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo)),
+		'Content-Type': 'application/json'
+	    },
 	    body: JSON.stringify(this._createCauseRequestMarshaller.pack(createCauseRequest))
 	});
 
@@ -680,7 +689,10 @@ export class CorePrivateClient {
 	}
 
 	const options = (Object as any).assign({}, CorePrivateClient._updateCauseOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))},
+	    headers: {
+		'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo)),
+		'Content-Type': 'application/json'
+	    },
 	    body: JSON.stringify(this._updateCauseRequestMarshaller.pack(updateCauseRequest))
 	});
 
