@@ -2,6 +2,8 @@ import * as HttpStatus from 'http-status-codes'
 import * as r from 'raynor'
 import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, OptionalOf } from 'raynor'
 
+import { Currency, CurrencyMarshaller } from '@neoncity/common-js/currency'
+import { IBAN, IBANMarshaller } from '@neoncity/common-js/iban'
 import { AuthInfo, User } from '@neoncity/identity-sdk-js'
 
 
@@ -66,14 +68,14 @@ export class CurrencyAmount {
     @MarshalWith(r.PositiveIntegerMarshaller)
     amount: number;
 
-    @MarshalWith(r.StringMarshaller)
-    currency: string;
+    @MarshalWith(CurrencyMarshaller)
+    currency: Currency;
 }
 
 
 export class BankInfo {
-    @MarshalWith(ArrayOf(r.StringMarshaller))
-    ibans: string[];
+    @MarshalWith(ArrayOf(IBANMarshaller))
+    ibans: IBAN[];
 }
 
 
