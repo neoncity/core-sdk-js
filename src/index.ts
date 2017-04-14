@@ -15,7 +15,7 @@ export enum CauseState {
 }
 
 
-class TitleMarshaller extends r.MaxLengthStringMarshaller {
+export class TitleMarshaller extends r.MaxLengthStringMarshaller {
     constructor() {
 	super(128);
     }
@@ -32,7 +32,7 @@ class TitleMarshaller extends r.MaxLengthStringMarshaller {
 }
 
 
-class DescriptionMarshaller extends r.MaxLengthStringMarshaller {
+export class DescriptionMarshaller extends r.MaxLengthStringMarshaller {
     constructor() {
 	super(10 * 1024);
     }
