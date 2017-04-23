@@ -64,6 +64,31 @@ export class Picture {
 }
 
 
+export class PictureSet {
+    public static readonly MAX_NUMBER_OF_PICTURES = 25;
+
+    @MarshalWith(ArrayOf(MarshalFrom(Picture)))
+    pictures: Picture[];
+}
+
+
+export class PictureSetMarshaller extends MarshalFrom(PictureSet) {
+    filter(pictureSet: PictureSet): PictureSet {
+        if (pictureSet.pictures.length > PictureSet.MAX_NUMBER_OF_PICTURES) {
+            throw new ExtractError('Expected less than MAX_NUMBER_OF_PICTURES');
+        }
+
+        for (let i = 0; i < pictureSet.pictures.length; i++) {
+            if (pictureSet.pictures[i].position != i + 1) {
+                throw new ExtractError(`Expected picture {i} position to follow the pattern`);
+            }
+        }
+
+        return pictureSet;
+    }
+}
+
+
 export class CurrencyAmount {
     @MarshalWith(r.PositiveIntegerMarshaller)
     amount: number;
@@ -101,8 +126,8 @@ export class Cause {
     @MarshalWith(DescriptionMarshaller)
     description: string;
 
-    @MarshalWith(ArrayOf(MarshalFrom(Picture)))
-    pictures: Picture[];
+    @MarshalWith(PictureSetMarshaller)
+    pictureSet: PictureSet;
 
     @MarshalWith(r.TimeMarshaller)
     deadline: Date;
@@ -232,8 +257,8 @@ export class CreateCauseRequest {
     @MarshalWith(DescriptionMarshaller)
     description: string;
 
-    @MarshalWith(ArrayOf(MarshalFrom(Picture)))
-    pictures: Picture[];
+    @MarshalWith(PictureSetMarshaller)
+    pictureSet: PictureSet;
 
     @MarshalWith(r.TimeMarshaller)
     deadline: Date;
@@ -253,8 +278,8 @@ export class UpdateCauseRequest {
     @MarshalWith(OptionalOf(DescriptionMarshaller))
     description: string|null;
 
-    @MarshalWith(OptionalOf(ArrayOf(MarshalFrom(Picture))))
-    pictures: Picture[]|null;
+    @MarshalWith(OptionalOf(PictureSetMarshaller))
+    pictureSet: PictureSet|null;
 
     @MarshalWith(OptionalOf(r.TimeMarshaller))
     deadline: Date|null;
@@ -300,7 +325,7 @@ export class NoCauseForUserError extends CoreError {
 export interface UpdateCauseOptions {
     title?: string;
     description?: string;
-    pictures?: Picture[];
+    picturesSet?: PictureSet;
     deadline?: Date;
     goal?: CurrencyAmount;
     bankInfo?: BankInfo;
@@ -608,12 +633,12 @@ export class CorePrivateClient {
 	this._actionsOverviewResponseMarshaller = actionsOverviewResponseMarshaller;
     }
 
-    async createCause(accessToken: string, title: string, description: string, pictures: Picture[], deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
+    async createCause(accessToken: string, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
 	const authInfo = new AuthInfo(accessToken);
 	const createCauseRequest = new CreateCauseRequest();
 	createCauseRequest.title = title;
 	createCauseRequest.description = description;
-	createCauseRequest.pictures = pictures;
+	createCauseRequest.pictureSet = pictureSet;
 	createCauseRequest.deadline = deadline;
 	createCauseRequest.goal = goal;
 	createCauseRequest.bankInfo = bankInfo;
