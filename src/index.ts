@@ -113,8 +113,29 @@ export class CurrencyAmount {
 
 
 export class BankInfo {
+    public static readonly MAX_NUMBER_OF_IBANS = 25;
+    
     @MarshalWith(ArrayOf(IBANMarshaller))
     ibans: IBAN[];
+}
+
+
+export class BankInfoMarshaller implements Marshaller<BankInfo> {
+    private static readonly _basicMarshaller = new (MarshalFrom(BankInfo))();
+
+    extract(raw: any): BankInfo {
+        const bankInfo = BankInfoMarshaller._basicMarshaller.extract(raw);
+
+        if (bankInfo.ibans.length > BankInfo.MAX_NUMBER_OF_IBANS) {
+            throw new ExtractError('Expected less than MAX_NUMBER_OF_IBANS');
+        }
+
+        return bankInfo;
+    }
+
+    pack(bankInfo: BankInfo): any {
+        return BankInfoMarshaller._basicMarshaller.pack(bankInfo);
+    }
 }
 
 
