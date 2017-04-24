@@ -69,6 +69,10 @@ export class PictureSet {
 
     @MarshalWith(ArrayOf(MarshalFrom(Picture)))
     pictures: Picture[];
+
+    constructor() {
+        this.pictures = [];
+    }
 }
 
 
