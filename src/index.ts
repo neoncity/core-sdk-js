@@ -72,8 +72,14 @@ export class PictureSet {
 }
 
 
-export class PictureSetMarshaller extends MarshalFrom(PictureSet) {
-    filter(pictureSet: PictureSet): PictureSet {
+/// This should be PictureSetMarshaller extends MarshalFrom(PictureSet). But TypeScript
+/// can't yet handle this pattern properly when it comes to generating .d.ts files.
+export class PictureSetMarshaller implements Marshaller<PictureSet> {
+    private static readonly _basicMarshaller = new (MarshalFrom(PictureSet))();
+
+    extract(raw: any): PictureSet {
+        const pictureSet = PictureSetMarshaller._basicMarshaller.extract(raw);
+        
         if (pictureSet.pictures.length > PictureSet.MAX_NUMBER_OF_PICTURES) {
             throw new ExtractError('Expected less than MAX_NUMBER_OF_PICTURES');
         }
@@ -85,6 +91,10 @@ export class PictureSetMarshaller extends MarshalFrom(PictureSet) {
         }
 
         return pictureSet;
+    }
+
+    pack(pictureSet: PictureSet): any {
+        return PictureSetMarshaller._basicMarshaller.pack(pictureSet);
     }
 }
 
