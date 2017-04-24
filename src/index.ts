@@ -335,7 +335,7 @@ export class NoCauseForUserError extends CoreError {
 export interface UpdateCauseOptions {
     title?: string;
     description?: string;
-    picturesSet?: PictureSet;
+    pictureSet?: PictureSet;
     deadline?: Date;
     goal?: CurrencyAmount;
     bankInfo?: BankInfo;
