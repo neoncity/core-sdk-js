@@ -177,7 +177,7 @@ export class PublicCause extends Cause {
 
 
 export class PrivateCause extends Cause {
-    @MarshalWith(MarshalFrom(BankInfo))
+    @MarshalWith(BankInfoMarshaller)
     bankInfo: BankInfo;
 }
 
@@ -301,7 +301,7 @@ export class CreateCauseRequest {
     @MarshalWith(MarshalFrom(CurrencyAmount))
     goal: CurrencyAmount;
 
-    @MarshalWith(MarshalFrom(BankInfo))
+    @MarshalWith(BankInfoMarshaller)
     bankInfo: BankInfo;
 }
 
@@ -322,7 +322,7 @@ export class UpdateCauseRequest {
     @MarshalWith(OptionalOf(MarshalFrom(CurrencyAmount)))
     goal: CurrencyAmount|null;
 
-    @MarshalWith(OptionalOf(MarshalFrom(BankInfo)))
+    @MarshalWith(OptionalOf(BankInfoMarshaller))
     bankInfo: BankInfo|null;
 }
 
