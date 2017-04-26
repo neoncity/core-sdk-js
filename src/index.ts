@@ -49,6 +49,23 @@ export class DescriptionMarshaller extends r.MaxLengthStringMarshaller {
 }
 
 
+export class FacebookPostIdMarshaller extends r.MaxLengthStringMarshaller {
+    private static readonly _numberRegExp: RegExp = new RegExp('^[0-9]+$');
+    
+    constructor() {
+        super(128);
+    }
+
+    filter(s: string): string {
+        if (!FacebookPostIdMarshaller._numberRegExp.test(s)) {
+            throw new ExtractError('Expected a post id');
+        }
+
+        return s;
+    }
+}
+
+
 export class Picture {
     @MarshalWith(r.PositiveIntegerMarshaller)
     position: number;
@@ -221,6 +238,9 @@ export class ShareForCause {
 
     @MarshalWith(MarshalFrom(User))
     fromUser: User;
+
+    @MarshalWith(FacebookPostIdMarshaller)
+    facebookPostId: string;
 }
 
 
@@ -233,6 +253,9 @@ export class ShareForUser {
 
     @MarshalWith(MarshalFrom(PublicCause))
     forCause: PublicCause;
+
+    @MarshalWith(FacebookPostIdMarshaller)
+    facebookPostId: string;
 }
 
 
@@ -264,6 +287,8 @@ export class CreateDonationRequest {
 
 
 export class CreateShareRequest {
+    @MarshalWith(FacebookPostIdMarshaller)
+    facebookPostId: string;
 }
 
 
@@ -551,9 +576,10 @@ export class CorePublicClient {
 	}	
     }
 
-    async createShare(accessToken: string, causeId: number): Promise<ShareForUser> {
+    async createShare(accessToken: string, causeId: number, facebookPostId: string): Promise<ShareForUser> {
 	const authInfo = new AuthInfo(accessToken);
 	const createShareRequest = new CreateShareRequest();
+        createShareRequest.facebookPostId = facebookPostId;
 
         const options = (Object as any).assign({}, CorePublicClient._createShareOptions, {
 	    headers: {
