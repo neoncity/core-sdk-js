@@ -163,12 +163,6 @@ export class Cause {
     @MarshalWith(MarshalEnum(CauseState))
     state: CauseState;
 
-    @MarshalWith(r.TimeMarshaller)
-    timeCreated: Date;
-
-    @MarshalWith(r.TimeMarshaller)
-    timeLastUpdated: Date;
-
     @MarshalWith(r.SlugMarshaller)
     slug: string;
 
@@ -186,6 +180,12 @@ export class Cause {
 
     @MarshalWith(MarshalFrom(CurrencyAmount))
     goal: CurrencyAmount;
+
+    @MarshalWith(r.TimeMarshaller)
+    timeCreated: Date;
+
+    @MarshalWith(r.TimeMarshaller)
+    timeLastUpdated: Date;
 }
 
 
@@ -206,11 +206,11 @@ export class DonationForCause {
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
-    @MarshalWith(MarshalFrom(User))
-    fromUser: User;
-
     @MarshalWith(MarshalFrom(CurrencyAmount))
     amount: CurrencyAmount;
+
+    @MarshalWith(MarshalFrom(User))
+    fromUser: User;
 }
 
 
@@ -221,11 +221,11 @@ export class DonationForUser {
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
-    @MarshalWith(MarshalFrom(PublicCause))
-    forCause: PublicCause;
-
     @MarshalWith(MarshalFrom(CurrencyAmount))
     amount: CurrencyAmount;
+
+    @MarshalWith(MarshalFrom(PublicCause))
+    forCause: PublicCause;
 }
 
 
@@ -236,11 +236,11 @@ export class ShareForCause {
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
-    @MarshalWith(MarshalFrom(User))
-    fromUser: User;
-
     @MarshalWith(FacebookPostIdMarshaller)
     facebookPostId: string;
+
+    @MarshalWith(MarshalFrom(User))
+    fromUser: User;
 }
 
 
@@ -251,11 +251,11 @@ export class ShareForUser {
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
-    @MarshalWith(MarshalFrom(PublicCause))
-    forCause: PublicCause;
-
     @MarshalWith(FacebookPostIdMarshaller)
     facebookPostId: string;
+
+    @MarshalWith(MarshalFrom(PublicCause))
+    forCause: PublicCause;
 }
 
 
