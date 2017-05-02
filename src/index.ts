@@ -1,6 +1,6 @@
 import * as HttpStatus from 'http-status-codes'
 import * as r from 'raynor'
-import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, OptionalOf } from 'raynor'
+import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, OneOf3, OptionalOf } from 'raynor'
 
 import { Currency, CurrencyMarshaller } from '@neoncity/common-js/currency'
 import { IBAN, IBANMarshaller } from '@neoncity/common-js/iban'
@@ -196,6 +196,33 @@ export class PublicCause extends Cause {
 export class PrivateCause extends Cause {
     @MarshalWith(BankInfoMarshaller)
     bankInfo: BankInfo;
+}
+
+
+export enum CauseEventType {
+    Unknown = 0,
+    Created = 1,
+    Updated = 2,
+    Succeeded = 3,
+    Removed = 4
+}
+
+
+export class CauseEvent {
+    @MarshalWith(r.IdMarshaller)
+    id: number;
+
+    @MarshalWith(MarshalEnum(CauseEventType))
+    type: CauseEventType;
+
+    @MarshalWith(r.TimeMarshaller)
+    timestamp: Date;
+
+    @MarshalWith(OneOf3(
+        MarshalFrom(CreateCauseRequest),
+        MarshalFrom(UpdateCauseRequest),
+        r.NullMarshaller))
+    data: CreateCauseRequest|UpdateCauseRequest|null;
 }
 
 
