@@ -1,6 +1,6 @@
 import * as HttpStatus from 'http-status-codes'
 import * as r from 'raynor'
-import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, OneOf3, OptionalOf } from 'raynor'
+import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, OneOf2, OptionalOf } from 'raynor'
 
 import { Currency, CurrencyMarshaller } from '@neoncity/common-js/currency'
 import { IBAN, IBANMarshaller } from '@neoncity/common-js/iban'
@@ -218,10 +218,9 @@ export class CauseEvent {
     @MarshalWith(r.TimeMarshaller)
     timestamp: Date;
 
-    @MarshalWith(OneOf3(
+    @MarshalWith(OptionalOf(OneOf2(
         MarshalFrom(CreateCauseRequest),
-        MarshalFrom(UpdateCauseRequest),
-        r.NullMarshaller))
+        MarshalFrom(UpdateCauseRequest))))
     data: CreateCauseRequest|UpdateCauseRequest|null;
 }
 
@@ -256,6 +255,27 @@ export class DonationForUser {
 }
 
 
+export enum DonationEventType {
+    Unknown = 0,
+    Created = 1
+}
+
+
+export class DonationEvent {
+    @MarshalWith(r.IdMarshaller)
+    id: number;
+
+    @MarshalWith(MarshalEnum(DonationEventType))
+    type: DonationEventType;
+
+    @MarshalWith(r.TimeMarshaller)
+    timestamp: Date;
+
+    @MarshalWith(OptionalOf(MarshalFrom(CreateDonationRequest)))
+    data: CreateDonationRequest|null;
+}
+
+
 export class ShareForCause {
     @MarshalWith(r.IdMarshaller)
     id: number;
@@ -283,6 +303,27 @@ export class ShareForUser {
 
     @MarshalWith(MarshalFrom(PublicCause))
     forCause: PublicCause;
+}
+
+
+export enum ShareEventType {
+    Unknown = 0,
+    Created = 1
+}
+
+
+export class ShareEvent {
+    @MarshalWith(r.IdMarshaller)
+    id: number;
+
+    @MarshalWith(MarshalEnum(ShareEventType))
+    type: ShareEventType;
+
+    @MarshalWith(r.TimeMarshaller)
+    timestamp: Date;
+
+    @MarshalWith(OptionalOf(MarshalFrom(CreateShareRequest)))
+    data: CreateShareRequest|null;
 }
 
 
