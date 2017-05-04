@@ -384,6 +384,12 @@ export class CauseEvent {
 }
 
 
+export class CauseEventsResponse {
+    @MarshalWith(ArrayOf(MarshalFrom(CauseEvent)))
+    events: CauseEvent[];
+}
+
+
 export enum DonationEventType {
     Unknown = 0,
     Created = 1
