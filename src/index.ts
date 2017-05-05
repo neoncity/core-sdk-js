@@ -199,6 +199,30 @@ export class PrivateCause extends Cause {
 }
 
 
+export class CauseAnalytics {
+    @MarshalWith(r.PositiveIntegerMarshaller)
+    daysLeft: number;
+
+    @MarshalWith(r.PositiveIntegerMarshaller)
+    donorsCount: number;
+
+    @MarshalWith(r.PositiveIntegerMarshaller)
+    donationsCount: number;
+
+    @MarshalWith(MarshalFrom(CurrencyAmount))
+    amountDonated: CurrencyAmount;
+
+    @MarshalWith(r.PositiveIntegerMarshaller)
+    sharersCount: number;
+
+    @MarshalWith(r.PositiveIntegerMarshaller)
+    sharesCount: number;
+
+    @MarshalWith(r.PositiveIntegerMarshaller)
+    sharesReach: number;
+}
+
+
 export class DonationForCause {
     @MarshalWith(r.IdMarshaller)
     id: number;
@@ -349,6 +373,12 @@ export class UpdateCauseRequest {
 
     @MarshalWith(OptionalOf(BankInfoMarshaller))
     bankInfo: BankInfo|null;
+}
+
+
+export class CauseAnalyticsResponse {
+    @MarshalWith(MarshalFrom(CauseAnalytics))
+    causeAnalytics: CauseAnalytics;
 }
 
 
@@ -693,6 +723,7 @@ export function newCorePrivateClient(coreServiceHost: string) {
     const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest))();
     const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest))();
     const privateCauseResponseMarshaller = new (MarshalFrom(PrivateCauseResponse))();
+    const causeAnalyticsResponseMarshaller = new (MarshalFrom(CauseAnalyticsResponse))();
     const actionsOverviewResponseMarshaller = new (MarshalFrom(ActionsOverviewResponse))();
     
     return new CorePrivateClient(
@@ -701,6 +732,7 @@ export function newCorePrivateClient(coreServiceHost: string) {
 	createCauseRequestMarshaller,
 	updateCauseRequestMarshaller,
 	privateCauseResponseMarshaller,
+	causeAnalyticsResponseMarshaller,
 	actionsOverviewResponseMarshaller);
 }
 
@@ -738,19 +770,28 @@ export class CorePrivateClient {
 	referrer: 'client'
     };
 
-    private static readonly _getActionsOverviewOptions: RequestInit = {
+    private static readonly _getCauseAnalyticsOptions: RequestInit = {
 	method: 'GET',
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client'
     };
+
+    private static readonly _getActionsOverviewOptions: RequestInit = {
+	method: 'GET',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client'
+    };    
     
     private readonly _coreServiceHost: string;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
     private readonly _createCauseRequestMarshaller: Marshaller<CreateCauseRequest>;
     private readonly _updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>;
     private readonly _privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>;
+    private readonly _causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>;
     private readonly _actionsOverviewResponseMarshaller: Marshaller<ActionsOverviewResponse>;
 
     constructor(
@@ -759,12 +800,14 @@ export class CorePrivateClient {
 	createCauseRequestMarshaller: Marshaller<CreateCauseRequest>,
 	updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>,
 	privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>,
+	causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>,
 	actionsOverviewResponseMarshaller: Marshaller<ActionsOverviewResponse>) {
         this._coreServiceHost = coreServiceHost;
         this._authInfoMarshaller = authInfoMarshaller;
 	this._createCauseRequestMarshaller = createCauseRequestMarshaller;
 	this._updateCauseRequestMarshaller = updateCauseRequestMarshaller;
 	this._privateCauseResponseMarshaller = privateCauseResponseMarshaller;
+	this._causeAnalyticsResponseMarshaller = causeAnalyticsResponseMarshaller;
 	this._actionsOverviewResponseMarshaller = actionsOverviewResponseMarshaller;
     }
 
@@ -903,6 +946,36 @@ export class CorePrivateClient {
 	    throw new CoreError(`Could not delete cause - service response ${rawResponse.status}`);
 	} 
     }
+
+    async getCauseAnalytics(accessToken: string): Promise<CauseAnalytics> {
+	const authInfo = new AuthInfo(accessToken);
+
+	const options = (Object as any).assign({}, CorePrivateClient._getCauseAnalyticsOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	});
+
+	let rawResponse: Response;
+	try {
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/cause-analytics`, options);
+	} catch (e) {
+	    throw new CoreError(`Could not retrieve cause analytics - request failed because '${e.toString()}'`);
+	}
+
+	if (rawResponse.ok) {
+	    try {
+		const jsonResponse = await rawResponse.json();
+		const causeAnalyticsResponse = this._causeAnalyticsResponseMarshaller.extract(jsonResponse);
+
+		return causeAnalyticsResponse.causeAnalytics;
+	    } catch (e) {
+		throw new CoreError(`Could not retrieve cause analytics - '${e.toString()}'`);
+	    }
+	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
+	} else {
+	    throw new CoreError(`Could not retrieve cause analytics - service response ${rawResponse.status}`);
+	}	
+    }    
 
     async getActionsOverview(accessToken: string): Promise<UserActionsOverview> {
 	const authInfo = new AuthInfo(accessToken);
