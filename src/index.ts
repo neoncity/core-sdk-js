@@ -919,6 +919,8 @@ export class CorePrivateClient {
 	    }
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
+	} else if (rawResponse.status == HttpStatus.NOT_FOUND) {
+            throw new NoCauseForUserError('User does not have a cause');
 	} else {
 	    throw new CoreError(`Could not update cause - service response ${rawResponse.status}`);
 	}
@@ -942,6 +944,8 @@ export class CorePrivateClient {
 	    // Do nothing
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
+	} else if (rawResponse.status == HttpStatus.NOT_FOUND) {
+            throw new NoCauseForUserError('User does not have a cause');
 	} else {
 	    throw new CoreError(`Could not delete cause - service response ${rawResponse.status}`);
 	} 
@@ -972,6 +976,8 @@ export class CorePrivateClient {
 	    }
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
+	} else if (rawResponse.status == HttpStatus.NOT_FOUND) {
+            throw new NoCauseForUserError('User does not have a cause');
 	} else {
 	    throw new CoreError(`Could not retrieve cause analytics - service response ${rawResponse.status}`);
 	}	
