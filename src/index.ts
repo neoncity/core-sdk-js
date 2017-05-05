@@ -956,7 +956,7 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/cause-analytics`, options);
+	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes/analytics`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve cause analytics - request failed because '${e.toString()}'`);
 	}
