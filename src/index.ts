@@ -200,25 +200,25 @@ export class PrivateCause extends Cause {
 
 
 export class CauseAnalytics {
-    @MarshalWith(r.PositiveIntegerMarshaller)
+    @MarshalWith(r.NonNegativeIntegerMarshaller)
     daysLeft: number;
 
-    @MarshalWith(r.PositiveIntegerMarshaller)
+    @MarshalWith(r.NonNegativeIntegerMarshaller)
     donorsCount: number;
 
-    @MarshalWith(r.PositiveIntegerMarshaller)
+    @MarshalWith(r.NonNegativeIntegerMarshaller)
     donationsCount: number;
 
     @MarshalWith(MarshalFrom(CurrencyAmount))
     amountDonated: CurrencyAmount;
 
-    @MarshalWith(r.PositiveIntegerMarshaller)
+    @MarshalWith(r.NonNegativeIntegerMarshaller)
     sharersCount: number;
 
-    @MarshalWith(r.PositiveIntegerMarshaller)
+    @MarshalWith(r.NonNegativeIntegerMarshaller)
     sharesCount: number;
 
-    @MarshalWith(r.PositiveIntegerMarshaller)
+    @MarshalWith(r.NonNegativeIntegerMarshaller)
     sharesReach: number;
 }
 
