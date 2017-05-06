@@ -121,7 +121,7 @@ export class PictureSetMarshaller implements Marshaller<PictureSet> {
 
 
 export class CurrencyAmount {
-    @MarshalWith(r.PositiveIntegerMarshaller)
+    @MarshalWith(r.NonNegativeIntegerMarshaller)
     amount: number;
 
     @MarshalWith(CurrencyMarshaller)
