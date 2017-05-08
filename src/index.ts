@@ -1,6 +1,6 @@
 import * as HttpStatus from 'http-status-codes'
 import * as r from 'raynor'
-import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, OneOf2, OptionalOf } from 'raynor'
+import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, ObjectMarshaller, OneOf2, OptionalOf } from 'raynor'
 
 import { Currency, CurrencyMarshaller } from '@neoncity/common-js/currency'
 import { IBAN, IBANMarshaller } from '@neoncity/common-js/iban'
@@ -317,8 +317,35 @@ export class CreateShareRequest {
 
 
 export class PrivateCauseResponse {
-    @MarshalWith(MarshalFrom(PrivateCause))
-    cause: PrivateCause;
+    @MarshalWith(r.BooleanMarshaller)
+    causeIsRemoved: boolean;
+    
+    @MarshalWith(OptionalOf(MarshalFrom(PrivateCause)))
+    cause: PrivateCause|null;
+}
+
+
+// Should be extends MarshalFrom(PrivateCauseResponse). Typescript doesn't yet support that.
+export class PrivateCauseResponseMarshaller implements Marshaller<PrivateCauseResponse> {
+    private static readonly _basicMarshaller: ObjectMarshaller<PrivateCauseResponse> = new (MarshalFrom(PrivateCauseResponse))();
+
+    extract(raw: any): PrivateCauseResponse {
+	const response = PrivateCauseResponseMarshaller._basicMarshaller.extract(raw);
+	
+	if (response.causeIsRemoved && response.cause != null) {
+	    throw new ExtractError('Expected no cause when it is removed');
+	}
+
+	if (!response.causeIsRemoved && response.cause == null) {
+	    throw new ExtractError('Expected a cause when it is not removed');
+	}
+	
+	return response;
+    }
+
+    pack(response: PrivateCauseResponse): any {
+	return PrivateCauseResponseMarshaller._basicMarshaller.pack(response);
+    }
 }
 
 
@@ -474,6 +501,14 @@ export class UnauthorizedCoreError extends CoreError {
     constructor(message: string) {
         super(message);
         this.name = 'UnauthorizedCoreError';
+    }
+}
+
+
+export class CauseDeletedForUserError extends CoreError {
+    constructor(message: string) {
+	super(message);
+	this.name = 'CauseDeletedForUserError';
     }
 }
 
@@ -722,7 +757,7 @@ export function newCorePrivateClient(coreServiceHost: string) {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest))();
     const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest))();
-    const privateCauseResponseMarshaller = new (MarshalFrom(PrivateCauseResponse))();
+    const privateCauseResponseMarshaller = new PrivateCauseResponseMarshaller();
     const causeAnalyticsResponseMarshaller = new (MarshalFrom(CauseAnalyticsResponse))();
     const actionsOverviewResponseMarshaller = new (MarshalFrom(ActionsOverviewResponse))();
     
@@ -841,7 +876,11 @@ export class CorePrivateClient {
 		const jsonResponse = await rawResponse.json();
 		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 
-		return privateCauseResponse.cause;
+		if (privateCauseResponse.causeIsRemoved) {
+		    throw new CauseDeletedForUserError('Cause already deleted');
+		}
+
+		return privateCauseResponse.cause as PrivateCause;
 	    } catch (e) {
 		throw new CoreError(`Chould not retrieve cause - '${e.toString()}'`);
 	    }
@@ -871,7 +910,11 @@ export class CorePrivateClient {
 		const jsonResponse = await rawResponse.json();
 		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 
-		return privateCauseResponse.cause;
+		if (privateCauseResponse.causeIsRemoved) {
+		    throw new CauseDeletedForUserError('Cause already deleted');
+		}
+
+		return privateCauseResponse.cause as PrivateCause;
 	    } catch (e) {
 		throw new CoreError(`Could not retrieve cause - '${e.toString()}'`);
 	    }
@@ -913,7 +956,11 @@ export class CorePrivateClient {
 		const jsonResponse = await rawResponse.json();
 		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 
-		return privateCauseResponse.cause;
+		if (privateCauseResponse.causeIsRemoved) {
+		    throw new CauseDeletedForUserError('Cause already deleted');
+		}
+
+		return privateCauseResponse.cause as PrivateCause;
 	    } catch (e) {
 		throw new CoreError(`Chould not update cause - '${e.toString()}'`);
 	    }
