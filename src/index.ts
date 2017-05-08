@@ -877,7 +877,7 @@ export class CorePrivateClient {
 		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 
 		if (privateCauseResponse.causeIsRemoved) {
-		    throw new CauseDeletedForUserError('Cause already deleted');
+		    throw new Error('Should not happen');
 		}
 
 		return privateCauseResponse.cause as PrivateCause;
