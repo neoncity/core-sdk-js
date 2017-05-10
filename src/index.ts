@@ -872,18 +872,19 @@ export class CorePrivateClient {
 	}
 
 	if (rawResponse.ok) {
+	    let privateCauseResponse = null;
 	    try {
 		const jsonResponse = await rawResponse.json();
-		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
-
-		if (privateCauseResponse.causeIsRemoved) {
-		    throw new Error('Should not happen');
-		}
-
-		return privateCauseResponse.cause as PrivateCause;
+		privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 	    } catch (e) {
 		throw new CoreError(`Chould not retrieve cause - '${e.toString()}'`);
 	    }
+
+	    if (privateCauseResponse.causeIsRemoved) {
+		throw new Error('Should not happen');
+	    }
+
+	    return privateCauseResponse.cause as PrivateCause;
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
 	} else {
@@ -906,18 +907,19 @@ export class CorePrivateClient {
 	}
 
 	if (rawResponse.ok) {
+	    let privateCauseResponse = null;
 	    try {
 		const jsonResponse = await rawResponse.json();
-		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
-
-		if (privateCauseResponse.causeIsRemoved) {
-		    throw new CauseDeletedForUserError('Cause already deleted');
-		}
-
-		return privateCauseResponse.cause as PrivateCause;
+		privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 	    } catch (e) {
 		throw new CoreError(`Could not retrieve cause - '${e.toString()}'`);
+	    }		
+
+            if (privateCauseResponse.causeIsRemoved) {
+	        throw new CauseDeletedForUserError('Cause already deleted');
 	    }
+
+	    return privateCauseResponse.cause as PrivateCause;
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
         } else if (rawResponse.status == HttpStatus.NOT_FOUND) {
@@ -952,18 +954,19 @@ export class CorePrivateClient {
 	}
 
 	if (rawResponse.ok) {
+	    let privateCauseResponse = null;
 	    try {
 		const jsonResponse = await rawResponse.json();
-		const privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
-
-		if (privateCauseResponse.causeIsRemoved) {
-		    throw new CauseDeletedForUserError('Cause already deleted');
-		}
-
-		return privateCauseResponse.cause as PrivateCause;
+		privateCauseResponse = this._privateCauseResponseMarshaller.extract(jsonResponse);
 	    } catch (e) {
 		throw new CoreError(`Chould not update cause - '${e.toString()}'`);
 	    }
+	    
+	    if (privateCauseResponse.causeIsRemoved) {
+		throw new CauseDeletedForUserError('Cause already deleted');
+	    }
+
+	    return privateCauseResponse.cause as PrivateCause;
 	} else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
 	    throw new UnauthorizedCoreError('User is not authorized');
 	} else if (rawResponse.status == HttpStatus.NOT_FOUND) {
