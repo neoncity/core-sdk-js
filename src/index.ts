@@ -3,6 +3,7 @@ import * as r from 'raynor'
 import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith, ObjectMarshaller, OneOf2, OptionalOf } from 'raynor'
 
 import { Currency, CurrencyMarshaller } from '@neoncity/common-js/currency'
+import { Env, isLocal } from '@neoncity/common-js/env'
 import { IBAN, IBANMarshaller } from '@neoncity/common-js/iban'
 import { AuthInfo, User } from '@neoncity/identity-sdk-js'
 
@@ -531,7 +532,7 @@ export interface UpdateCauseOptions {
 }
 
 
-export function newCorePublicClient(coreServiceHost: string) {
+export function newCorePublicClient(env: Env, coreServiceHost: string) {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createDonationRequestMarshaller = new (MarshalFrom(CreateDonationRequest));
     const createShareRequestMarshaller = new (MarshalFrom(CreateShareRequest));
@@ -541,6 +542,7 @@ export function newCorePublicClient(coreServiceHost: string) {
     const userShareResponseMarshaller = new (MarshalFrom(UserShareResponse));
     
     return new CorePublicClient(
+	env,
         coreServiceHost,
         authInfoMarshaller,
 	createDonationRequestMarshaller,
@@ -584,7 +586,8 @@ export class CorePublicClient {
 	redirect: 'error',
 	referrer: 'client'	
     };
-    
+
+    private readonly _env: Env;
     private readonly _coreServiceHost: string;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
     private readonly _createDonationRequestMarshaller: Marshaller<CreateDonationRequest>;
@@ -592,9 +595,11 @@ export class CorePublicClient {
     private readonly _publicCausesResponseMarshaller: Marshaller<PublicCausesResponse>;
     private readonly _publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>;
     private readonly _userDonationResponseMarshaller: Marshaller<UserDonationResponse>;
-    private readonly _userShareResponseMarshaller: Marshaller<UserShareResponse>;    
+    private readonly _userShareResponseMarshaller: Marshaller<UserShareResponse>;
+    private readonly _protocol: string;
     
     constructor(
+	env: Env,
 	coreServiceHost: string,
 	authInfoMarshaller: Marshaller<AuthInfo>,
 	createDonationRequestMarshaller: Marshaller<CreateDonationRequest>,
@@ -603,6 +608,7 @@ export class CorePublicClient {
 	publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>,
 	userDonationResponseMarshaller: Marshaller<UserDonationResponse>,
 	userShareResponseMarshaller: Marshaller<UserShareResponse>) {
+	this._env = env;
 	this._coreServiceHost = coreServiceHost;
 	this._authInfoMarshaller = authInfoMarshaller;
 	this._createDonationRequestMarshaller = createDonationRequestMarshaller;
@@ -611,6 +617,12 @@ export class CorePublicClient {
 	this._publicCauseResponseMarshaller = publicCauseResponseMarshaller;
 	this._userDonationResponseMarshaller = userDonationResponseMarshaller;
 	this._userShareResponseMarshaller = userShareResponseMarshaller;
+
+	if (isLocal(this._env)) {
+	    this._protocol = 'http';
+	} else {
+	    this._protocol = 'https';
+	}	
     }
     
     async getCauses(accessToken: string|null): Promise<PublicCause[]> {
@@ -625,7 +637,7 @@ export class CorePublicClient {
 
         let rawResponse: Response;
         try {
-            rawResponse = await fetch(`http://${this._coreServiceHost}/public/causes`, options);
+            rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes`, options);
         } catch (e) {
             throw new CoreError(`Could not retrieve causes - request failed because '${e.toString()}'`);
         }
@@ -658,7 +670,7 @@ export class CorePublicClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/public/causes/${causeId}`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/${causeId}`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -694,7 +706,7 @@ export class CorePublicClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/public/causes/${causeId}/donations`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/${causeId}/donations`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create donation for cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -730,7 +742,7 @@ export class CorePublicClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/public/causes/${causeId}/shares`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/${causeId}/shares`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create share for cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -753,7 +765,7 @@ export class CorePublicClient {
 }
 
 
-export function newCorePrivateClient(coreServiceHost: string) {
+export function newCorePrivateClient(env: Env, coreServiceHost: string) {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest))();
     const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest))();
@@ -762,6 +774,7 @@ export function newCorePrivateClient(coreServiceHost: string) {
     const actionsOverviewResponseMarshaller = new (MarshalFrom(ActionsOverviewResponse))();
     
     return new CorePrivateClient(
+	env,
         coreServiceHost,
         authInfoMarshaller,
 	createCauseRequestMarshaller,
@@ -820,7 +833,8 @@ export class CorePrivateClient {
 	redirect: 'error',
 	referrer: 'client'
     };    
-    
+
+    private readonly _env: Env;
     private readonly _coreServiceHost: string;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
     private readonly _createCauseRequestMarshaller: Marshaller<CreateCauseRequest>;
@@ -828,8 +842,10 @@ export class CorePrivateClient {
     private readonly _privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>;
     private readonly _causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>;
     private readonly _actionsOverviewResponseMarshaller: Marshaller<ActionsOverviewResponse>;
+    private readonly _protocol: string;
 
     constructor(
+	env: Env,
         coreServiceHost: string,
         authInfoMarshaller: Marshaller<AuthInfo>,
 	createCauseRequestMarshaller: Marshaller<CreateCauseRequest>,
@@ -837,6 +853,7 @@ export class CorePrivateClient {
 	privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>,
 	causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>,
 	actionsOverviewResponseMarshaller: Marshaller<ActionsOverviewResponse>) {
+	this._env = env;
         this._coreServiceHost = coreServiceHost;
         this._authInfoMarshaller = authInfoMarshaller;
 	this._createCauseRequestMarshaller = createCauseRequestMarshaller;
@@ -844,6 +861,12 @@ export class CorePrivateClient {
 	this._privateCauseResponseMarshaller = privateCauseResponseMarshaller;
 	this._causeAnalyticsResponseMarshaller = causeAnalyticsResponseMarshaller;
 	this._actionsOverviewResponseMarshaller = actionsOverviewResponseMarshaller;
+
+	if (isLocal(this._env)) {
+	    this._protocol = 'http';
+	} else {
+	    this._protocol = 'https';
+	}	
     }
 
     async createCause(accessToken: string, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
@@ -866,7 +889,7 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create cause - request failed because '${e.toString()}'`);
 	}
@@ -901,7 +924,7 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve cause - request failed because '${e.toString()}'`);
 	}
@@ -948,7 +971,7 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not update cause - request failed because '${e.toString()}'`);
 	}
@@ -985,7 +1008,7 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not delete cause - request failed because '${e.toString()}'`);
 	}
@@ -1010,7 +1033,7 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/causes/analytics`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes/analytics`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve cause analytics - request failed because '${e.toString()}'`);
 	}
@@ -1042,7 +1065,7 @@ export class CorePrivateClient {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`http://${this._coreServiceHost}/private/actions-overview`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/actions-overview`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve actions overview - request failed because '${e.toString()}'`);
 	}
