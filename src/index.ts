@@ -71,7 +71,7 @@ export class Picture {
     @MarshalWith(r.PositiveIntegerMarshaller)
     position: number;
     
-    @MarshalWith(r.UriMarshaller)
+    @MarshalWith(r.SecureWebUriMarshaller)
     uri: string;
 
     @MarshalWith(r.PositiveIntegerMarshaller)
