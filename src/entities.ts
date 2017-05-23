@@ -224,14 +224,14 @@ export class DonationForCause {
     @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(r.TimeMarshaller)
-    timeCreated: Date;
-
     @MarshalWith(MarshalFrom(CurrencyAmount))
     amount: CurrencyAmount;
 
     @MarshalWith(MarshalFrom(User))
     fromUser: User;
+
+    @MarshalWith(r.TimeMarshaller)
+    timeCreated: Date;
 }
 
 
@@ -239,14 +239,14 @@ export class DonationForUser {
     @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(r.TimeMarshaller)
-    timeCreated: Date;
-
     @MarshalWith(MarshalFrom(CurrencyAmount))
     amount: CurrencyAmount;
 
     @MarshalWith(MarshalFrom(PublicCause))
     forCause: PublicCause;
+
+    @MarshalWith(r.TimeMarshaller)
+    timeCreated: Date;
 }
 
 
@@ -254,14 +254,14 @@ export class ShareForCause {
     @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(r.TimeMarshaller)
-    timeCreated: Date;
-
     @MarshalWith(FacebookPostIdMarshaller)
     facebookPostId: string;
 
     @MarshalWith(MarshalFrom(User))
     fromUser: User;
+
+    @MarshalWith(r.TimeMarshaller)
+    timeCreated: Date;
 }
 
 
@@ -269,14 +269,14 @@ export class ShareForUser {
     @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(r.TimeMarshaller)
-    timeCreated: Date;
-
     @MarshalWith(FacebookPostIdMarshaller)
     facebookPostId: string;
 
     @MarshalWith(MarshalFrom(PublicCause))
     forCause: PublicCause;
+
+    @MarshalWith(r.TimeMarshaller)
+    timeCreated: Date;
 }
 
 
