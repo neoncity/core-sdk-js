@@ -269,11 +269,11 @@ export class ShareForUser {
     @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(FacebookPostIdMarshaller)
-    facebookPostId: string;
-
     @MarshalWith(MarshalFrom(PublicCause))
     forCause: PublicCause;
+
+    @MarshalWith(FacebookPostIdMarshaller)
+    facebookPostId: string;
 
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
