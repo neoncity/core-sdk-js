@@ -89,7 +89,7 @@ export function newCorePublicClient(env: Env, coreServiceHost: string) {
 
 
 export class CorePublicClient {
-    private static readonly _getPublicCausesOptions: RequestInit = {
+    private static readonly _getCausesOptions: RequestInit = {
 	method: 'GET',
 	mode: 'cors',
 	cache: 'no-cache',
@@ -97,7 +97,7 @@ export class CorePublicClient {
 	referrer: 'client'
     };
 
-    private static readonly _getPublicCauseOptions: RequestInit = {
+    private static readonly _getCauseOptions: RequestInit = {
 	method: 'GET',
 	mode: 'cors',
 	cache: 'no-cache',
@@ -159,15 +159,12 @@ export class CorePublicClient {
 	}	
     }
     
-    async getCauses(accessToken: string|null): Promise<PublicCause[]> {
-	let options: RequestInit = CorePublicClient._getPublicCausesOptions;
-	if (accessToken != null) {
-	    const authInfo = new AuthInfo(accessToken);
-	
-            options = (Object as any).assign({}, CorePublicClient._getPublicCausesOptions, {
-		headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
-	    });
-	}
+    async getCauses(sessionId: string, auth0AccessToken: string|null): Promise<PublicCause[]> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+
+	const options = (Object as any).assign({}, CorePublicClient._getCausesOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	});
 
         let rawResponse: Response;
         try {
@@ -192,15 +189,11 @@ export class CorePublicClient {
         }	
     }
 
-    async getCause(accessToken: string|null, causeId: number): Promise<PublicCause> {
-	let options: RequestInit = CorePublicClient._getPublicCauseOptions;
-	if (accessToken != null) {
-	    const authInfo = new AuthInfo(accessToken);
-	
-            options = (Object as any).assign({}, CorePublicClient._getPublicCauseOptions, {
-		headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
-	    });
-	}
+    async getCause(sessionId: string, auth0AccessToken: string|null, causeId: number): Promise<PublicCause> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+	const options = (Object as any).assign({}, CorePublicClient._getCauseOptions, {
+	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	});
 
 	let rawResponse: Response;
 	try {
@@ -225,8 +218,8 @@ export class CorePublicClient {
 	}
     }
 
-    async createDonation(accessToken: string, causeId: number, amount: CurrencyAmount): Promise<DonationForUser> {
-	const authInfo = new AuthInfo(accessToken);
+    async createDonation(sessionId: string, auth0AccessToken: string, causeId: number, amount: CurrencyAmount): Promise<DonationForUser> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 	const createDonationRequest = new CreateDonationRequest();
 	createDonationRequest.amount = amount;
 
@@ -261,8 +254,8 @@ export class CorePublicClient {
 	}	
     }
 
-    async createShare(accessToken: string, causeId: number, facebookPostId: string): Promise<ShareForUser> {
-	const authInfo = new AuthInfo(accessToken);
+    async createShare(sessionId: string, auth0AccessToken: string, causeId: number, facebookPostId: string): Promise<ShareForUser> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 	const createShareRequest = new CreateShareRequest();
         createShareRequest.facebookPostId = facebookPostId;
 
@@ -403,8 +396,8 @@ export class CorePrivateClient {
 	}	
     }
 
-    async createCause(accessToken: string, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
-	const authInfo = new AuthInfo(accessToken);
+    async createCause(sessionId: string, auth0AccessToken: string, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 	const createCauseRequest = new CreateCauseRequest();
 	createCauseRequest.title = title;
 	createCauseRequest.description = description;
@@ -449,8 +442,8 @@ export class CorePrivateClient {
 	}
     }
 
-    async getCause(accessToken: string): Promise<PrivateCause> {
-	const authInfo = new AuthInfo(accessToken);
+    async getCause(sessionId: string, auth0AccessToken: string): Promise<PrivateCause> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 
 	const options = (Object as any).assign({}, CorePrivateClient._getCauseOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
@@ -486,8 +479,8 @@ export class CorePrivateClient {
 	}
     }
 
-    async updateCause(accessToken: string, updateOptions: UpdateCauseOptions): Promise<PrivateCause> {
-	const authInfo = new AuthInfo(accessToken);
+    async updateCause(sessionId: string, auth0AccessToken: string, updateOptions: UpdateCauseOptions): Promise<PrivateCause> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 	const updateCauseRequest = new UpdateCauseRequest();
 
 	// Hackety-hack-hack.
@@ -533,8 +526,8 @@ export class CorePrivateClient {
 	}
     }
 
-    async deleteCause(accessToken: string): Promise<void> {
-	const authInfo = new AuthInfo(accessToken);
+    async deleteCause(sessionId: string, auth0AccessToken: string): Promise<void> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 
 	const options = (Object as any).assign({}, CorePrivateClient._deleteCauseOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
@@ -558,8 +551,8 @@ export class CorePrivateClient {
 	} 
     }
 
-    async getCauseAnalytics(accessToken: string): Promise<CauseAnalytics> {
-	const authInfo = new AuthInfo(accessToken);
+    async getCauseAnalytics(sessionId: string, auth0AccessToken: string): Promise<CauseAnalytics> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 
 	const options = (Object as any).assign({}, CorePrivateClient._getCauseAnalyticsOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
@@ -590,8 +583,8 @@ export class CorePrivateClient {
 	}	
     }    
 
-    async getActionsOverview(accessToken: string): Promise<UserActionsOverview> {
-	const authInfo = new AuthInfo(accessToken);
+    async getActionsOverview(sessionId: string, auth0AccessToken: string): Promise<UserActionsOverview> {
+	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 
 	const options = (Object as any).assign({}, CorePrivateClient._getActionsOverviewOptions, {
 	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
