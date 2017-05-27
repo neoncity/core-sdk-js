@@ -4,24 +4,31 @@ import { Marshaller, MarshalFrom } from 'raynor'
 import { isLocal, Env } from '@neoncity/common-js'
 import { AuthInfo } from '@neoncity/identity-sdk-js'
 
-import { CreateCauseRequest, CreateDonationRequest, CreateShareRequest, UpdateCauseRequest } from './requests'
-import { ActionsOverviewResponse,
-	 CauseAnalyticsResponse,
-	 PrivateCauseResponse,
-	 PrivateCauseResponseMarshaller,
-	 PublicCausesResponse,
-	 PublicCauseResponse,
-	 UserDonationResponse,
-	 UserShareResponse } from './responses'
-import { BankInfo,
-	 CauseAnalytics,
-	 CurrencyAmount,
-	 DonationForUser,
-	 PictureSet,
-	 PrivateCause,
-	 PublicCause,
-	 ShareForUser,
-	 UserActionsOverview } from './entities'
+import {
+    BankInfo,
+    CauseAnalytics,
+    CurrencyAmount,
+    DonationForSession,
+    PictureSet,
+    PrivateCause,
+    PublicCause,
+    ShareForSession,
+    UserActionsOverview } from './entities'
+import {
+    CreateCauseRequest,
+    CreateDonationRequest,
+    CreateShareRequest,
+    UpdateCauseRequest } from './requests'
+import {
+    CauseAnalyticsResponse,
+    PrivateCauseResponse,
+    PrivateCauseResponseMarshaller,
+    PublicCausesResponse,
+    PublicCauseResponse,
+    SessionDonationResponse,
+    SessionShareResponse,
+    UserActionsOverviewResponse } from './responses'
+
 
 
 export class CoreError extends Error {
@@ -72,8 +79,8 @@ export function newCorePublicClient(env: Env, coreServiceHost: string) {
     const createShareRequestMarshaller = new (MarshalFrom(CreateShareRequest));
     const publicCausesResponseMarshaller = new (MarshalFrom(PublicCausesResponse));
     const publicCauseResponseMarshaller = new (MarshalFrom(PublicCauseResponse));
-    const userDonationResponseMarshaller = new (MarshalFrom(UserDonationResponse));
-    const userShareResponseMarshaller = new (MarshalFrom(UserShareResponse));
+    const sessionDonationResponseMarshaller = new (MarshalFrom(SessionDonationResponse));
+    const sessionShareResponseMarshaller = new (MarshalFrom(SessionShareResponse));
     
     return new CorePublicClient(
 	env,
@@ -83,8 +90,8 @@ export function newCorePublicClient(env: Env, coreServiceHost: string) {
 	createShareRequestMarshaller,
         publicCausesResponseMarshaller,
 	publicCauseResponseMarshaller,
-	userDonationResponseMarshaller,
-	userShareResponseMarshaller);
+	sessionDonationResponseMarshaller,
+	sessionShareResponseMarshaller);
 }
 
 
@@ -128,8 +135,9 @@ export class CorePublicClient {
     private readonly _createShareRequestMarshaller: Marshaller<CreateShareRequest>;
     private readonly _publicCausesResponseMarshaller: Marshaller<PublicCausesResponse>;
     private readonly _publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>;
-    private readonly _userDonationResponseMarshaller: Marshaller<UserDonationResponse>;
-    private readonly _userShareResponseMarshaller: Marshaller<UserShareResponse>;
+    private readonly _sessionDonationResponseMarshaller: Marshaller<SessionDonationResponse>;
+    private readonly _sessionShareResponseMarshaller: Marshaller<SessionShareResponse>;
+    private readonly _authInfo: AuthInfo|null;
     private readonly _protocol: string;
     
     constructor(
@@ -140,8 +148,9 @@ export class CorePublicClient {
 	createShareRequestMarshaller: Marshaller<CreateShareRequest>,
         publicCausesResponseMarshaller: Marshaller<PublicCausesResponse>,
 	publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>,
-	userDonationResponseMarshaller: Marshaller<UserDonationResponse>,
-	userShareResponseMarshaller: Marshaller<UserShareResponse>) {
+	sessionDonationResponseMarshaller: Marshaller<SessionDonationResponse>,
+	sessionShareResponseMarshaller: Marshaller<SessionShareResponse>,
+	authInfo: AuthInfo|null = null) {
 	this._env = env;
 	this._coreServiceHost = coreServiceHost;
 	this._authInfoMarshaller = authInfoMarshaller;
@@ -149,8 +158,9 @@ export class CorePublicClient {
 	this._createShareRequestMarshaller = createShareRequestMarshaller;
         this._publicCausesResponseMarshaller = publicCausesResponseMarshaller;
 	this._publicCauseResponseMarshaller = publicCauseResponseMarshaller;
-	this._userDonationResponseMarshaller = userDonationResponseMarshaller;
-	this._userShareResponseMarshaller = userShareResponseMarshaller;
+	this._sessionDonationResponseMarshaller = sessionDonationResponseMarshaller;
+	this._sessionShareResponseMarshaller = sessionShareResponseMarshaller;
+	this._authInfo = authInfo;
 
 	if (isLocal(this._env)) {
 	    this._protocol = 'http';
@@ -158,13 +168,27 @@ export class CorePublicClient {
 	    this._protocol = 'https';
 	}	
     }
-    
-    async getCauses(sessionId: string, auth0AccessToken: string|null): Promise<PublicCause[]> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 
-	const options = (Object as any).assign({}, CorePublicClient._getCausesOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
-	});
+    withAuthInfo(authInfo: AuthInfo): CorePublicClient {
+	return new CorePublicClient(
+	    this._env,
+	    this._coreServiceHost,
+	    this._authInfoMarshaller,
+	    this._createDonationRequestMarshaller,
+	    this._createShareRequestMarshaller,
+	    this._publicCausesResponseMarshaller,
+	    this._publicCauseResponseMarshaller,
+	    this._sessionDonationResponseMarshaller,
+	    this._sessionShareResponseMarshaller,
+	    authInfo);
+    }
+    
+    async getCauses(): Promise<PublicCause[]> {
+	const options = (Object as any).assign({}, CorePublicClient._getCausesOptions);
+
+	if (this._authInfo != null) {
+	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	}
 
         let rawResponse: Response;
         try {
@@ -189,11 +213,12 @@ export class CorePublicClient {
         }	
     }
 
-    async getCause(sessionId: string, auth0AccessToken: string|null, causeId: number): Promise<PublicCause> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
-	const options = (Object as any).assign({}, CorePublicClient._getCauseOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
-	});
+    async getCause(causeId: number): Promise<PublicCause> {
+	const options = (Object as any).assign({}, CorePublicClient._getCauseOptions);
+
+	if (this._authInfo != null) {
+	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	}
 
 	let rawResponse: Response;
 	try {
@@ -218,18 +243,18 @@ export class CorePublicClient {
 	}
     }
 
-    async createDonation(sessionId: string, auth0AccessToken: string, causeId: number, amount: CurrencyAmount): Promise<DonationForUser> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+    async createDonation(causeId: number, amount: CurrencyAmount): Promise<DonationForSession> {
 	const createDonationRequest = new CreateDonationRequest();
 	createDonationRequest.amount = amount;
 
         const options = (Object as any).assign({}, CorePublicClient._createDonationOptions, {
-	    headers: {
-		'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo)),
-		'Content-Type': 'application/json'
-	    },
+	    headers: {'Content-Type': 'application/json'},
 	    body: JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest))
 	});
+
+	if (this._authInfo != null) {
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
+	}
 
 	let rawResponse: Response;
 	try {
@@ -241,9 +266,9 @@ export class CorePublicClient {
 	if (rawResponse.ok) {
 	    try {
 		const jsonResponse = await rawResponse.json();
-		const userDonationResponse = this._userDonationResponseMarshaller.extract(jsonResponse);
+		const sessionDonationResponse = this._sessionDonationResponseMarshaller.extract(jsonResponse);
 
-		return userDonationResponse.donation;
+		return sessionDonationResponse.donation;
 	    } catch (e) {
 		throw new CoreError(`Chould not create donation for cause ${causeId} - '${e.toString()}'`);
 	    }
@@ -254,18 +279,18 @@ export class CorePublicClient {
 	}	
     }
 
-    async createShare(sessionId: string, auth0AccessToken: string, causeId: number, facebookPostId: string): Promise<ShareForUser> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+    async createShare(causeId: number, facebookPostId: string): Promise<ShareForSession> {
 	const createShareRequest = new CreateShareRequest();
         createShareRequest.facebookPostId = facebookPostId;
 
         const options = (Object as any).assign({}, CorePublicClient._createShareOptions, {
-	    headers: {
-		'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo)),
-		'Content-Type': 'application/json'
-	    },
+	    headers: {'Content-Type': 'application/json'},
 	    body: JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest))
 	});
+
+	if (this._authInfo != null) {
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
+	}
 
 	let rawResponse: Response;
 	try {
@@ -277,9 +302,9 @@ export class CorePublicClient {
 	if (rawResponse.ok) {
 	    try {
 		const jsonResponse = await rawResponse.json();
-		const userShareResponse = this._userShareResponseMarshaller.extract(jsonResponse);
+		const sessionShareResponse = this._sessionShareResponseMarshaller.extract(jsonResponse);
 
-		return userShareResponse.share;
+		return sessionShareResponse.share;
 	    } catch (e) {
 		throw new CoreError(`Chould not create share for cause ${causeId} - '${e.toString()}'`);
 	    }
@@ -298,7 +323,7 @@ export function newCorePrivateClient(env: Env, coreServiceHost: string) {
     const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest))();
     const privateCauseResponseMarshaller = new PrivateCauseResponseMarshaller();
     const causeAnalyticsResponseMarshaller = new (MarshalFrom(CauseAnalyticsResponse))();
-    const actionsOverviewResponseMarshaller = new (MarshalFrom(ActionsOverviewResponse))();
+    const userActionsOverviewResponseMarshaller = new (MarshalFrom(UserActionsOverviewResponse))();
     
     return new CorePrivateClient(
 	env,
@@ -308,7 +333,7 @@ export function newCorePrivateClient(env: Env, coreServiceHost: string) {
 	updateCauseRequestMarshaller,
 	privateCauseResponseMarshaller,
 	causeAnalyticsResponseMarshaller,
-	actionsOverviewResponseMarshaller);
+	userActionsOverviewResponseMarshaller);
 }
 
 
@@ -353,7 +378,7 @@ export class CorePrivateClient {
 	referrer: 'client'
     };
 
-    private static readonly _getActionsOverviewOptions: RequestInit = {
+    private static readonly _getUserActionsOverviewOptions: RequestInit = {
 	method: 'GET',
 	mode: 'cors',
 	cache: 'no-cache',
@@ -368,7 +393,8 @@ export class CorePrivateClient {
     private readonly _updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>;
     private readonly _privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>;
     private readonly _causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>;
-    private readonly _actionsOverviewResponseMarshaller: Marshaller<ActionsOverviewResponse>;
+    private readonly _userActionsOverviewResponseMarshaller: Marshaller<UserActionsOverviewResponse>;
+    private readonly _authInfo: AuthInfo|null;
     private readonly _protocol: string;
 
     constructor(
@@ -379,7 +405,8 @@ export class CorePrivateClient {
 	updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>,
 	privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>,
 	causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>,
-	actionsOverviewResponseMarshaller: Marshaller<ActionsOverviewResponse>) {
+	userActionsOverviewResponseMarshaller: Marshaller<UserActionsOverviewResponse>,
+	authInfo: AuthInfo|null = null) {
 	this._env = env;
         this._coreServiceHost = coreServiceHost;
         this._authInfoMarshaller = authInfoMarshaller;
@@ -387,7 +414,8 @@ export class CorePrivateClient {
 	this._updateCauseRequestMarshaller = updateCauseRequestMarshaller;
 	this._privateCauseResponseMarshaller = privateCauseResponseMarshaller;
 	this._causeAnalyticsResponseMarshaller = causeAnalyticsResponseMarshaller;
-	this._actionsOverviewResponseMarshaller = actionsOverviewResponseMarshaller;
+	this._userActionsOverviewResponseMarshaller = userActionsOverviewResponseMarshaller;
+	this._authInfo = authInfo;
 
 	if (isLocal(this._env)) {
 	    this._protocol = 'http';
@@ -396,8 +424,20 @@ export class CorePrivateClient {
 	}	
     }
 
-    async createCause(sessionId: string, auth0AccessToken: string, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+    withAuthInfo(authInfo: AuthInfo): CorePrivateClient {
+	return new CorePrivateClient(
+	    this._env,
+	    this._coreServiceHost,
+	    this._authInfoMarshaller,
+	    this._createCauseRequestMarshaller,
+	    this._updateCauseRequestMarshaller,
+	    this._privateCauseResponseMarshaller,
+	    this._causeAnalyticsResponseMarshaller,
+	    this._userActionsOverviewResponseMarshaller,
+	    authInfo);
+    }
+
+    async createCause(title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
 	const createCauseRequest = new CreateCauseRequest();
 	createCauseRequest.title = title;
 	createCauseRequest.description = description;
@@ -407,12 +447,13 @@ export class CorePrivateClient {
 	createCauseRequest.bankInfo = bankInfo;
 
         const options = (Object as any).assign({}, CorePrivateClient._createCauseOptions, {
-	    headers: {
-		'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo)),
-		'Content-Type': 'application/json'
-	    },
+	    headers: {'Content-Type': 'application/json'},
 	    body: JSON.stringify(this._createCauseRequestMarshaller.pack(createCauseRequest))
 	});
+
+	if (this._authInfo != null) {
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
+	}
 
 	let rawResponse: Response;
 	try {
@@ -442,12 +483,12 @@ export class CorePrivateClient {
 	}
     }
 
-    async getCause(sessionId: string, auth0AccessToken: string): Promise<PrivateCause> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+    async getCause(): Promise<PrivateCause> {
+	const options = (Object as any).assign({}, CorePrivateClient._getCauseOptions);
 
-	const options = (Object as any).assign({}, CorePrivateClient._getCauseOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
-	});
+	if (this._authInfo != null) {
+	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	}
 
 	let rawResponse: Response;
 	try {
@@ -479,8 +520,7 @@ export class CorePrivateClient {
 	}
     }
 
-    async updateCause(sessionId: string, auth0AccessToken: string, updateOptions: UpdateCauseOptions): Promise<PrivateCause> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+    async updateCause(updateOptions: UpdateCauseOptions): Promise<PrivateCause> {
 	const updateCauseRequest = new UpdateCauseRequest();
 
 	// Hackety-hack-hack.
@@ -489,12 +529,13 @@ export class CorePrivateClient {
 	}
 
 	const options = (Object as any).assign({}, CorePrivateClient._updateCauseOptions, {
-	    headers: {
-		'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo)),
-		'Content-Type': 'application/json'
-	    },
+	    headers: {'Content-Type': 'application/json'},
 	    body: JSON.stringify(this._updateCauseRequestMarshaller.pack(updateCauseRequest))
 	});
+
+	if (this._authInfo != null) {
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
+	}	
 
 	let rawResponse: Response;
 	try {
@@ -530,7 +571,7 @@ export class CorePrivateClient {
 	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 
 	const options = (Object as any).assign({}, CorePrivateClient._deleteCauseOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	    headers: {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
 	});
 
 	let rawResponse: Response;
@@ -555,7 +596,7 @@ export class CorePrivateClient {
 	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 
 	const options = (Object as any).assign({}, CorePrivateClient._getCauseAnalyticsOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	    headers: {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
 	});
 
 	let rawResponse: Response;
@@ -583,16 +624,16 @@ export class CorePrivateClient {
 	}	
     }    
 
-    async getActionsOverview(sessionId: string, auth0AccessToken: string): Promise<UserActionsOverview> {
+    async getUserActionsOverview(sessionId: string, auth0AccessToken: string): Promise<UserActionsOverview> {
 	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
 
-	const options = (Object as any).assign({}, CorePrivateClient._getActionsOverviewOptions, {
-	    headers: {'X-NeonCity-AuthInfo': JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
+	const options = (Object as any).assign({}, CorePrivateClient._getUserActionsOverviewOptions, {
+	    headers: {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
 	});
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/actions-overview`, options);
+	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/user-actions-overview`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve actions overview - request failed because '${e.toString()}'`);
 	}
@@ -600,9 +641,9 @@ export class CorePrivateClient {
 	if (rawResponse.ok) {
 	    try {
 		const jsonResponse = await rawResponse.json();
-		const actionsOverviewResponse = this._actionsOverviewResponseMarshaller.extract(jsonResponse);
+		const userActionsOverviewResponse = this._userActionsOverviewResponseMarshaller.extract(jsonResponse);
 
-		return actionsOverviewResponse.actionsOverview;
+		return userActionsOverviewResponse.userActionsOverview;
 	    } catch (e) {
 		throw new CoreError(`Could not retrieve actions overview - '${e.toString()}'`);
 	    }

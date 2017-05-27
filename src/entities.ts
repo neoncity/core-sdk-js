@@ -2,7 +2,7 @@ import * as r from 'raynor'
 import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith } from 'raynor'
 
 import { Currency, CurrencyMarshaller, IBAN, IBANMarshaller } from '@neoncity/common-js'
-import { User } from '@neoncity/identity-sdk-js'
+import { Session } from '@neoncity/identity-sdk-js'
 
 export enum CauseState {
     Unknown = 0,
@@ -227,15 +227,15 @@ export class DonationForCause {
     @MarshalWith(MarshalFrom(CurrencyAmount))
     amount: CurrencyAmount;
 
-    @MarshalWith(MarshalFrom(User))
-    fromUser: User;
+    @MarshalWith(MarshalFrom(Session))
+    fromSession: Session;
 
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 }
 
 
-export class DonationForUser {
+export class DonationForSession {
     @MarshalWith(r.IdMarshaller)
     id: number;
 
@@ -257,15 +257,15 @@ export class ShareForCause {
     @MarshalWith(FacebookPostIdMarshaller)
     facebookPostId: string;
 
-    @MarshalWith(MarshalFrom(User))
-    fromUser: User;
+    @MarshalWith(MarshalFrom(Session))
+    fromSession: Session;
 
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 }
 
 
-export class ShareForUser {
+export class ShareForSession {
     @MarshalWith(r.IdMarshaller)
     id: number;
 
@@ -281,9 +281,9 @@ export class ShareForUser {
 
 
 export class UserActionsOverview {
-    @MarshalWith(ArrayOf(MarshalFrom(DonationForUser)))
-    donations: DonationForUser[];
+    @MarshalWith(ArrayOf(MarshalFrom(DonationForSession)))
+    donations: DonationForSession[];
 
-    @MarshalWith(ArrayOf(MarshalFrom(ShareForUser)))
-    shares: ShareForUser[];    
+    @MarshalWith(ArrayOf(MarshalFrom(ShareForSession)))
+    shares: ShareForSession[];
 }

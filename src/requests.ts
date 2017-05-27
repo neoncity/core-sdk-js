@@ -1,14 +1,15 @@
 import * as r from 'raynor'
 import { MarshalFrom, MarshalWith, OptionalOf } from 'raynor'
 
-import { BankInfo,
-	 BankInfoMarshaller,
-	 CurrencyAmount,
-	 DescriptionMarshaller,
-	 FacebookPostIdMarshaller,
-	 PictureSet,
-	 PictureSetMarshaller,
-	 TitleMarshaller } from './entities'
+import {
+    BankInfo,
+    BankInfoMarshaller,
+    CurrencyAmount,
+    DescriptionMarshaller,
+    FacebookPostIdMarshaller,
+    PictureSet,
+    PictureSetMarshaller,
+    TitleMarshaller } from './entities'
 
 
 export class CreateCauseRequest {

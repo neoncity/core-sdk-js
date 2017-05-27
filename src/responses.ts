@@ -1,8 +1,13 @@
 import * as r from 'raynor'
 import { ArrayOf, ExtractError, Marshaller, MarshalFrom, MarshalWith, ObjectMarshaller, OptionalOf } from 'raynor'
 
-import { CauseAnalytics, DonationForUser, PrivateCause, PublicCause, ShareForUser, UserActionsOverview } from './entities'
-import { CauseEvent } from './events'
+import {
+    CauseAnalytics,
+    DonationForSession,
+    PrivateCause,
+    PublicCause,
+    ShareForSession,
+    UserActionsOverview } from './entities'
 
 
 export class PublicCausesResponse {
@@ -50,15 +55,15 @@ export class PrivateCauseResponseMarshaller implements Marshaller<PrivateCauseRe
 }
 
 
-export class UserDonationResponse {
-    @MarshalWith(MarshalFrom(DonationForUser))
-    donation: DonationForUser;
+export class SessionDonationResponse {
+    @MarshalWith(MarshalFrom(DonationForSession))
+    donation: DonationForSession;
 }
 
 
-export class UserShareResponse {
-    @MarshalWith(MarshalFrom(ShareForUser))
-    share: ShareForUser;
+export class SessionShareResponse {
+    @MarshalWith(MarshalFrom(ShareForSession))
+    share: ShareForSession;
 }
 
 
@@ -68,13 +73,7 @@ export class CauseAnalyticsResponse {
 }
 
 
-export class ActionsOverviewResponse {
+export class UserActionsOverviewResponse {
     @MarshalWith(MarshalFrom(UserActionsOverview))
-    actionsOverview: UserActionsOverview;
-}
-
-
-export class CauseEventsResponse {
-    @MarshalWith(ArrayOf(MarshalFrom(CauseEvent)))
-    events: CauseEvent[];
+    userActionsOverview: UserActionsOverview;
 }
