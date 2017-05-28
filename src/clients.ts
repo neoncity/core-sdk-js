@@ -577,12 +577,12 @@ export class CorePrivateClient {
 	}
     }
 
-    async deleteCause(sessionId: string, auth0AccessToken: string): Promise<void> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+    async deleteCause(): Promise<void> {
+	const options = (Object as any).assign({}, CorePrivateClient._deleteCauseOptions);
 
-	const options = (Object as any).assign({}, CorePrivateClient._deleteCauseOptions, {
-	    headers: {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
-	});
+	if (this._authInfo != null) {
+	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	}
 
 	let rawResponse: Response;
 	try {
