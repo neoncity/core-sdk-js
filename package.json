@@ -1,6 +1,6 @@
 {
   "name": "@neoncity/core-sdk-js",
-  "version": "4.12.2",
+  "version": "4.12.3",
   "description": "The SDK for the core service.",
   "author": "NeonCity team",
   "scripts": {

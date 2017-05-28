@@ -602,12 +602,12 @@ export class CorePrivateClient {
 	} 
     }
 
-    async getCauseAnalytics(sessionId: string, auth0AccessToken: string): Promise<CauseAnalytics> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+    async getCauseAnalytics(): Promise<CauseAnalytics> {
+	const options = (Object as any).assign({}, CorePrivateClient._getCauseAnalyticsOptions);
 
-	const options = (Object as any).assign({}, CorePrivateClient._getCauseAnalyticsOptions, {
-	    headers: {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
-	});
+	if (this._authInfo != null) {
+	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	}
 
 	let rawResponse: Response;
 	try {
@@ -634,12 +634,12 @@ export class CorePrivateClient {
 	}	
     }    
 
-    async getUserActionsOverview(sessionId: string, auth0AccessToken: string): Promise<UserActionsOverview> {
-	const authInfo = new AuthInfo(sessionId, auth0AccessToken);
+    async getUserActionsOverview(): Promise<UserActionsOverview> {
+	const options = (Object as any).assign({}, CorePrivateClient._getUserActionsOverviewOptions);
 
-	const options = (Object as any).assign({}, CorePrivateClient._getUserActionsOverviewOptions, {
-	    headers: {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(authInfo))}
-	});
+	if (this._authInfo != null) {
+	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	}
 
 	let rawResponse: Response;
 	try {
