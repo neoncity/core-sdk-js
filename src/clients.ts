@@ -101,7 +101,8 @@ export class CorePublicClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'
+	referrer: 'client',
+	credentials: 'include'
     };
 
     private static readonly _getCauseOptions: RequestInit = {
@@ -109,7 +110,8 @@ export class CorePublicClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'
+	referrer: 'client',
+	credentials: 'include'
     };
 
     private static readonly _createDonationOptions: RequestInit = {
@@ -117,7 +119,8 @@ export class CorePublicClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'	
+	referrer: 'client',
+	credentials: 'include'	
     };
 
     private static readonly _createShareOptions: RequestInit = {
@@ -125,7 +128,8 @@ export class CorePublicClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'	
+	referrer: 'client',
+	credentials: 'include'	
     };
 
     private readonly _env: Env;
@@ -343,7 +347,8 @@ export class CorePrivateClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'
+	referrer: 'client',
+	credentials: 'include'
     };
 
     private static readonly _getCauseOptions: RequestInit = {
@@ -351,7 +356,8 @@ export class CorePrivateClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'
+	referrer: 'client',
+	credentials: 'include'
     };
 
     private static readonly _updateCauseOptions: RequestInit = {
@@ -359,7 +365,8 @@ export class CorePrivateClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'
+	referrer: 'client',
+	credentials: 'include'
     };    
 
     private static readonly _deleteCauseOptions: RequestInit = {
@@ -367,7 +374,8 @@ export class CorePrivateClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'
+	referrer: 'client',
+	credentials: 'include'
     };
 
     private static readonly _getCauseAnalyticsOptions: RequestInit = {
@@ -375,7 +383,8 @@ export class CorePrivateClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'
+	referrer: 'client',
+	credentials: 'include'
     };
 
     private static readonly _getUserActionsOverviewOptions: RequestInit = {
@@ -383,7 +392,8 @@ export class CorePrivateClient {
 	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
-	referrer: 'client'
+	referrer: 'client',
+	credentials: 'include'
     };    
 
     private readonly _env: Env;
