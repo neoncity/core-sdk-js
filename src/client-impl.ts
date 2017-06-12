@@ -1,9 +1,18 @@
+import 'isomorphic-fetch'
 import * as HttpStatus from 'http-status-codes'
 import { Marshaller, MarshalFrom } from 'raynor'
 
 import { isLocal, Env } from '@neoncity/common-js'
 import { AuthInfo } from '@neoncity/identity-sdk-js'
 
+import {
+    CauseDeletedForUserError,
+    CoreError,
+    CorePrivateClient,
+    CorePublicClient,
+    NoCauseForUserError,
+    UnauthorizedCoreError,
+    UpdateCauseOptions } from './client'
 import {
     BankInfo,
     CauseAnalytics,
@@ -31,49 +40,7 @@ import {
 
 
 
-export class CoreError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'CoreError';
-    }
-}
-
-
-export class UnauthorizedCoreError extends CoreError {
-    constructor(message: string) {
-        super(message);
-        this.name = 'UnauthorizedCoreError';
-    }
-}
-
-
-export class CauseDeletedForUserError extends CoreError {
-    constructor(message: string) {
-	super(message);
-	this.name = 'CauseDeletedForUserError';
-    }
-}
-
-
-export class NoCauseForUserError extends CoreError {
-    constructor(message: string) {
-        super(message);
-        this.name = 'NoCauseForUserError';
-    }
-}
-
-
-export interface UpdateCauseOptions {
-    title?: string;
-    description?: string;
-    pictureSet?: PictureSet;
-    deadline?: Date;
-    goal?: CurrencyAmount;
-    bankInfo?: BankInfo;
-}
-
-
-export function newCorePublicClient(env: Env, coreServiceHost: string) {
+export function newCorePublicClient(env: Env, coreServiceHost: string): CorePublicClient {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createDonationRequestMarshaller = new (MarshalFrom(CreateDonationRequest));
     const createShareRequestMarshaller = new (MarshalFrom(CreateShareRequest));
@@ -82,7 +49,7 @@ export function newCorePublicClient(env: Env, coreServiceHost: string) {
     const sessionDonationResponseMarshaller = new (MarshalFrom(SessionDonationResponse));
     const sessionShareResponseMarshaller = new (MarshalFrom(SessionShareResponse));
     
-    return new CorePublicClient(
+    return new CorePublicClientImpl(
 	env,
         coreServiceHost,
         authInfoMarshaller,
@@ -95,7 +62,7 @@ export function newCorePublicClient(env: Env, coreServiceHost: string) {
 }
 
 
-export class CorePublicClient {
+class CorePublicClientImpl {
     private static readonly _getCausesOptions: RequestInit = {
 	method: 'GET',
 	mode: 'cors',
@@ -174,7 +141,7 @@ export class CorePublicClient {
     }
 
     withAuthInfo(authInfo: AuthInfo): CorePublicClient {
-	return new CorePublicClient(
+	return new CorePublicClientImpl(
 	    this._env,
 	    this._coreServiceHost,
 	    this._authInfoMarshaller,
@@ -188,7 +155,7 @@ export class CorePublicClient {
     }
     
     async getCauses(): Promise<PublicCause[]> {
-	const options = (Object as any).assign({}, CorePublicClient._getCausesOptions);
+	const options = (Object as any).assign({}, CorePublicClientImpl._getCausesOptions);
 
 	if (this._authInfo != null) {
 	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
@@ -218,7 +185,7 @@ export class CorePublicClient {
     }
 
     async getCause(causeId: number): Promise<PublicCause> {
-	const options = (Object as any).assign({}, CorePublicClient._getCauseOptions);
+	const options = (Object as any).assign({}, CorePublicClientImpl._getCauseOptions);
 
 	if (this._authInfo != null) {
 	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
@@ -251,7 +218,7 @@ export class CorePublicClient {
 	const createDonationRequest = new CreateDonationRequest();
 	createDonationRequest.amount = amount;
 
-        const options = (Object as any).assign({}, CorePublicClient._createDonationOptions, {
+        const options = (Object as any).assign({}, CorePublicClientImpl._createDonationOptions, {
 	    headers: {'Content-Type': 'application/json'},
 	    body: JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest))
 	});
@@ -287,7 +254,7 @@ export class CorePublicClient {
 	const createShareRequest = new CreateShareRequest();
         createShareRequest.facebookPostId = facebookPostId;
 
-        const options = (Object as any).assign({}, CorePublicClient._createShareOptions, {
+        const options = (Object as any).assign({}, CorePublicClientImpl._createShareOptions, {
 	    headers: {'Content-Type': 'application/json'},
 	    body: JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest))
 	});
@@ -321,7 +288,7 @@ export class CorePublicClient {
 }
 
 
-export function newCorePrivateClient(env: Env, coreServiceHost: string) {
+export function newCorePrivateClient(env: Env, coreServiceHost: string): CorePrivateClient {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest))();
     const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest))();
@@ -329,7 +296,7 @@ export function newCorePrivateClient(env: Env, coreServiceHost: string) {
     const causeAnalyticsResponseMarshaller = new (MarshalFrom(CauseAnalyticsResponse))();
     const userActionsOverviewResponseMarshaller = new (MarshalFrom(UserActionsOverviewResponse))();
     
-    return new CorePrivateClient(
+    return new CorePrivateClientImpl(
 	env,
         coreServiceHost,
         authInfoMarshaller,
@@ -341,7 +308,7 @@ export function newCorePrivateClient(env: Env, coreServiceHost: string) {
 }
 
 
-export class CorePrivateClient {
+class CorePrivateClientImpl {
     private static readonly _createCauseOptions: RequestInit = {
 	method: 'POST',
 	mode: 'cors',
@@ -435,7 +402,7 @@ export class CorePrivateClient {
     }
 
     withAuthInfo(authInfo: AuthInfo): CorePrivateClient {
-	return new CorePrivateClient(
+	return new CorePrivateClientImpl(
 	    this._env,
 	    this._coreServiceHost,
 	    this._authInfoMarshaller,
@@ -456,7 +423,7 @@ export class CorePrivateClient {
 	createCauseRequest.goal = goal;
 	createCauseRequest.bankInfo = bankInfo;
 
-        const options = (Object as any).assign({}, CorePrivateClient._createCauseOptions, {
+        const options = (Object as any).assign({}, CorePrivateClientImpl._createCauseOptions, {
 	    headers: {'Content-Type': 'application/json'},
 	    body: JSON.stringify(this._createCauseRequestMarshaller.pack(createCauseRequest))
 	});
@@ -494,7 +461,7 @@ export class CorePrivateClient {
     }
 
     async getCause(): Promise<PrivateCause> {
-	const options = (Object as any).assign({}, CorePrivateClient._getCauseOptions);
+	const options = (Object as any).assign({}, CorePrivateClientImpl._getCauseOptions);
 
 	if (this._authInfo != null) {
 	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
@@ -538,7 +505,7 @@ export class CorePrivateClient {
 	    (updateCauseRequest as any)[key] = (updateOptions as any)[key];
 	}
 
-	const options = (Object as any).assign({}, CorePrivateClient._updateCauseOptions, {
+	const options = (Object as any).assign({}, CorePrivateClientImpl._updateCauseOptions, {
 	    headers: {'Content-Type': 'application/json'},
 	    body: JSON.stringify(this._updateCauseRequestMarshaller.pack(updateCauseRequest))
 	});
@@ -578,7 +545,7 @@ export class CorePrivateClient {
     }
 
     async deleteCause(): Promise<void> {
-	const options = (Object as any).assign({}, CorePrivateClient._deleteCauseOptions);
+	const options = (Object as any).assign({}, CorePrivateClientImpl._deleteCauseOptions);
 
 	if (this._authInfo != null) {
 	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
@@ -603,7 +570,7 @@ export class CorePrivateClient {
     }
 
     async getCauseAnalytics(): Promise<CauseAnalytics> {
-	const options = (Object as any).assign({}, CorePrivateClient._getCauseAnalyticsOptions);
+	const options = (Object as any).assign({}, CorePrivateClientImpl._getCauseAnalyticsOptions);
 
 	if (this._authInfo != null) {
 	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
@@ -635,7 +602,7 @@ export class CorePrivateClient {
     }    
 
     async getUserActionsOverview(): Promise<UserActionsOverview> {
-	const options = (Object as any).assign({}, CorePrivateClient._getUserActionsOverviewOptions);
+	const options = (Object as any).assign({}, CorePrivateClientImpl._getUserActionsOverviewOptions);
 
 	if (this._authInfo != null) {
 	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};

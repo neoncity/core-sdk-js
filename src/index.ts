@@ -1,4 +1,5 @@
-export * from './clients'
+export * from './client'
+export { newCorePublicClient, newCorePrivateClient } from './client-impl'
 export * from './entities'
 export * from './events'
 export * from './requests'

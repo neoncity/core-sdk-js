@@ -1,0 +1,77 @@
+import 'isomorphic-fetch'
+
+import { AuthInfo } from '@neoncity/identity-sdk-js'
+
+import {
+    BankInfo,
+    CauseAnalytics,
+    CurrencyAmount,
+    DonationForSession,
+    PictureSet,
+    PrivateCause,
+    PublicCause,
+    ShareForSession,
+    UserActionsOverview } from './entities'
+
+
+
+export class CoreError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'CoreError';
+    }
+}
+
+
+export class UnauthorizedCoreError extends CoreError {
+    constructor(message: string) {
+        super(message);
+        this.name = 'UnauthorizedCoreError';
+    }
+}
+
+
+export class CauseDeletedForUserError extends CoreError {
+    constructor(message: string) {
+	super(message);
+	this.name = 'CauseDeletedForUserError';
+    }
+}
+
+
+export class NoCauseForUserError extends CoreError {
+    constructor(message: string) {
+        super(message);
+        this.name = 'NoCauseForUserError';
+    }
+}
+
+
+export interface UpdateCauseOptions {
+    title?: string;
+    description?: string;
+    pictureSet?: PictureSet;
+    deadline?: Date;
+    goal?: CurrencyAmount;
+    bankInfo?: BankInfo;
+}
+
+
+export interface CorePublicClient {
+    withAuthInfo(authInfo: AuthInfo): CorePublicClient;
+    getCauses(): Promise<PublicCause[]>;
+    getCause(causeId: number): Promise<PublicCause>;
+    createDonation(causeId: number, amount: CurrencyAmount): Promise<DonationForSession>;
+    createShare(causeId: number, facebookPostId: string): Promise<ShareForSession>;
+}
+
+
+export interface CorePrivateClient {
+    withAuthInfo(authInfo: AuthInfo): CorePrivateClient;
+    createCause(title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause>;
+    getCause(): Promise<PrivateCause>;
+    updateCause(updateOptions: UpdateCauseOptions): Promise<PrivateCause>;
+    deleteCause(): Promise<void>;
+    getCauseAnalytics(): Promise<CauseAnalytics>;
+    getUserActionsOverview(): Promise<UserActionsOverview>;
+}
