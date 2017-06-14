@@ -3,7 +3,7 @@ import * as HttpStatus from 'http-status-codes'
 import { Marshaller, MarshalFrom } from 'raynor'
 
 import { isLocal, Env } from '@neoncity/common-js'
-import { AuthInfo } from '@neoncity/identity-sdk-js'
+import { AuthInfo, Session } from '@neoncity/identity-sdk-js'
 
 import {
     CauseDeletedForUserError,
@@ -214,12 +214,15 @@ class CorePublicClientImpl {
 	}
     }
 
-    async createDonation(causeId: number, amount: CurrencyAmount): Promise<DonationForSession> {
+    async createDonation(session: Session, causeId: number, amount: CurrencyAmount): Promise<DonationForSession> {
 	const createDonationRequest = new CreateDonationRequest();
 	createDonationRequest.amount = amount;
 
         const options = (Object as any).assign({}, CorePublicClientImpl._createDonationOptions, {
-	    headers: {'Content-Type': 'application/json'},
+	    headers: {
+                'Content-Type': 'application/json',
+                [Session.XsrfTokenHeaderName]: session.xsrfToken
+            },
 	    body: JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest))
 	});
 
@@ -250,12 +253,15 @@ class CorePublicClientImpl {
 	}	
     }
 
-    async createShare(causeId: number, facebookPostId: string): Promise<ShareForSession> {
+        async createShare(session: Session, causeId: number, facebookPostId: string): Promise<ShareForSession> {
 	const createShareRequest = new CreateShareRequest();
         createShareRequest.facebookPostId = facebookPostId;
 
         const options = (Object as any).assign({}, CorePublicClientImpl._createShareOptions, {
-	    headers: {'Content-Type': 'application/json'},
+	    headers: {
+                'Content-Type': 'application/json',
+                [Session.XsrfTokenHeaderName]: session.xsrfToken
+            },
 	    body: JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest))
 	});
 
@@ -414,7 +420,7 @@ class CorePrivateClientImpl {
 	    authInfo);
     }
 
-    async createCause(title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
+    async createCause(session: Session, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
 	const createCauseRequest = new CreateCauseRequest();
 	createCauseRequest.title = title;
 	createCauseRequest.description = description;
@@ -424,7 +430,10 @@ class CorePrivateClientImpl {
 	createCauseRequest.bankInfo = bankInfo;
 
         const options = (Object as any).assign({}, CorePrivateClientImpl._createCauseOptions, {
-	    headers: {'Content-Type': 'application/json'},
+	    headers: {
+                'Content-Type': 'application/json',
+                [Session.XsrfTokenHeaderName]: session.xsrfToken
+            },
 	    body: JSON.stringify(this._createCauseRequestMarshaller.pack(createCauseRequest))
 	});
 
@@ -497,7 +506,7 @@ class CorePrivateClientImpl {
 	}
     }
 
-    async updateCause(updateOptions: UpdateCauseOptions): Promise<PrivateCause> {
+    async updateCause(session: Session, updateOptions: UpdateCauseOptions): Promise<PrivateCause> {
 	const updateCauseRequest = new UpdateCauseRequest();
 
 	// Hackety-hack-hack.
@@ -506,7 +515,10 @@ class CorePrivateClientImpl {
 	}
 
 	const options = (Object as any).assign({}, CorePrivateClientImpl._updateCauseOptions, {
-	    headers: {'Content-Type': 'application/json'},
+	    headers: {
+                'Content-Type': 'application/json',
+                [Session.XsrfTokenHeaderName]: session.xsrfToken
+            },
 	    body: JSON.stringify(this._updateCauseRequestMarshaller.pack(updateCauseRequest))
 	});
 
@@ -544,11 +556,13 @@ class CorePrivateClientImpl {
 	}
     }
 
-    async deleteCause(): Promise<void> {
+    async deleteCause(session: Session): Promise<void> {
 	const options = (Object as any).assign({}, CorePrivateClientImpl._deleteCauseOptions);
 
+        options.headers = {[Session.XsrfTokenHeaderName]: session.xsrfToken};
+
 	if (this._authInfo != null) {
-	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
 	}
 
 	let rawResponse: Response;

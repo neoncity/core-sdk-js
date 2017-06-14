@@ -1,6 +1,6 @@
 import 'isomorphic-fetch'
 
-import { AuthInfo } from '@neoncity/identity-sdk-js'
+import { AuthInfo, Session } from '@neoncity/identity-sdk-js'
 
 import {
     BankInfo,
@@ -12,7 +12,6 @@ import {
     PublicCause,
     ShareForSession,
     UserActionsOverview } from './entities'
-
 
 
 export class CoreError extends Error {
@@ -61,17 +60,17 @@ export interface CorePublicClient {
     withAuthInfo(authInfo: AuthInfo): CorePublicClient;
     getCauses(): Promise<PublicCause[]>;
     getCause(causeId: number): Promise<PublicCause>;
-    createDonation(causeId: number, amount: CurrencyAmount): Promise<DonationForSession>;
-    createShare(causeId: number, facebookPostId: string): Promise<ShareForSession>;
+    createDonation(session: Session, causeId: number, amount: CurrencyAmount): Promise<DonationForSession>;
+    createShare(session: Session, causeId: number, facebookPostId: string): Promise<ShareForSession>;
 }
 
 
 export interface CorePrivateClient {
     withAuthInfo(authInfo: AuthInfo): CorePrivateClient;
-    createCause(title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause>;
+    createCause(session: Session, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause>;
     getCause(): Promise<PrivateCause>;
-    updateCause(updateOptions: UpdateCauseOptions): Promise<PrivateCause>;
-    deleteCause(): Promise<void>;
+    updateCause(session: Session, updateOptions: UpdateCauseOptions): Promise<PrivateCause>;
+    deleteCause(session: Session): Promise<void>;
     getCauseAnalytics(): Promise<CauseAnalytics>;
     getUserActionsOverview(): Promise<UserActionsOverview>;
 }
