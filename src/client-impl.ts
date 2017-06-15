@@ -269,6 +269,7 @@ class CorePublicClientImpl {
 	createDonationRequest.amount = amount;
 
         const options = this._buildOptions(CorePublicClientImpl._createDonationOptions, session);
+        options.headers['Content-Type'] = 'application/json';
         options.body = JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest));
 
 	let rawResponse: Response;
@@ -299,6 +300,7 @@ class CorePublicClientImpl {
         createShareRequest.facebookPostId = facebookPostId;
 
         const options = this._buildOptions(CorePublicClientImpl._createShareOptions, session);
+        options.headers['Content-Type'] = 'application/json';
         options.body = JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest));
 
 	let rawResponse: Response;
@@ -419,9 +421,9 @@ class CorePrivateClientImpl {
     private readonly _privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>;
     private readonly _causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>;
     private readonly _userActionsOverviewResponseMarshaller: Marshaller<UserActionsOverviewResponse>;
-    private readonly _hasContext: boolean;
     private readonly _authInfo: AuthInfo|null;
     private readonly _origin: string|null;
+    private readonly _defaultHeaders: HeadersInit;
     private readonly _protocol: string;
 
     constructor(
@@ -443,10 +445,19 @@ class CorePrivateClientImpl {
 	this._privateCauseResponseMarshaller = privateCauseResponseMarshaller;
 	this._causeAnalyticsResponseMarshaller = causeAnalyticsResponseMarshaller;
 	this._userActionsOverviewResponseMarshaller = userActionsOverviewResponseMarshaller;
-        this._hasContext = authInfo != null && origin != null;
 	this._authInfo = authInfo;
         this._origin = origin;
 
+        this._defaultHeaders = {};
+        
+        if (authInfo != null) {
+            this._defaultHeaders[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(authInfo));
+        }
+
+        if (origin != null) {
+            this._defaultHeaders['Origin'] = origin;
+        }
+        
 	if (isLocal(this._env)) {
 	    this._protocol = 'http';
 	} else {
@@ -454,7 +465,7 @@ class CorePrivateClientImpl {
 	}	
     }
 
-    withContext(authInfo: AuthInfo, origin: string): CorePrivateClient {
+    withContext(authInfo: AuthInfo|null, origin: string|null): CorePrivateClient {
 	return new CorePrivateClientImpl(
 	    this._env,
 	    this._coreServiceHost,
@@ -477,18 +488,9 @@ class CorePrivateClientImpl {
 	createCauseRequest.goal = goal;
 	createCauseRequest.bankInfo = bankInfo;
 
-        const options = (Object as any).assign({}, CorePrivateClientImpl._createCauseOptions, {
-	    headers: {
-                'Content-Type': 'application/json',
-                [Session.XsrfTokenHeaderName]: session.xsrfToken
-            },
-	    body: JSON.stringify(this._createCauseRequestMarshaller.pack(createCauseRequest))
-	});
-
-	if (this._hasContext) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
-            options.headers['Origin'] = this._origin;
-	}
+        const options = this._buildOptions(CorePrivateClientImpl._createCauseOptions, session);
+        options.headers['Content-Type'] = 'application/json';
+	options.body = JSON.stringify(this._createCauseRequestMarshaller.pack(createCauseRequest));
 
 	let rawResponse: Response;
 	try {
@@ -519,14 +521,7 @@ class CorePrivateClientImpl {
     }
 
     async getCause(): Promise<PrivateCause> {
-	const options = (Object as any).assign({}, CorePrivateClientImpl._getCauseOptions);
-
-	if (this._hasContext) {
-	    options.headers = {
-                [AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo)),
-                'Origin': this._origin
-            };
-	}
+	const options = this._buildOptions(CorePrivateClientImpl._getCauseOptions);
 
 	let rawResponse: Response;
 	try {
@@ -566,18 +561,9 @@ class CorePrivateClientImpl {
 	    (updateCauseRequest as any)[key] = (updateOptions as any)[key];
 	}
 
-	const options = (Object as any).assign({}, CorePrivateClientImpl._updateCauseOptions, {
-	    headers: {
-                'Content-Type': 'application/json',
-                [Session.XsrfTokenHeaderName]: session.xsrfToken
-            },
-	    body: JSON.stringify(this._updateCauseRequestMarshaller.pack(updateCauseRequest))
-	});
-
-	if (this._hasContext) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
-            options.headers['Origin'] = this._origin;
-	}	
+	const options = this._buildOptions(CorePrivateClientImpl._updateCauseOptions, session);
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(this._updateCauseRequestMarshaller.pack(updateCauseRequest));
 
 	let rawResponse: Response;
 	try {
@@ -610,14 +596,7 @@ class CorePrivateClientImpl {
     }
 
     async deleteCause(session: Session): Promise<void> {
-	const options = (Object as any).assign({}, CorePrivateClientImpl._deleteCauseOptions);
-
-        options.headers = {[Session.XsrfTokenHeaderName]: session.xsrfToken};
-
-	if (this._hasContext) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
-            options.headers['Origin'] = this._origin;
-	}
+	const options = this._buildOptions(CorePrivateClientImpl._deleteCauseOptions, session);
 
 	let rawResponse: Response;
 	try {
@@ -638,12 +617,7 @@ class CorePrivateClientImpl {
     }
 
     async getCauseAnalytics(): Promise<CauseAnalytics> {
-	const options = (Object as any).assign({}, CorePrivateClientImpl._getCauseAnalyticsOptions);
-
-	if (this._hasContext) {
-	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo))};
-            options.headers['Origin'] = this._origin;
-	}
+	const options = this._buildOptions(CorePrivateClientImpl._getCauseAnalyticsOptions);
 
 	let rawResponse: Response;
 	try {
@@ -671,12 +645,7 @@ class CorePrivateClientImpl {
     }    
 
     async getUserActionsOverview(): Promise<UserActionsOverview> {
-	const options = (Object as any).assign({}, CorePrivateClientImpl._getUserActionsOverviewOptions);
-
-	if (this._hasContext) {
-	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo))};
-            options.headers['Origin'] = this._origin;
-	}
+	const options = this._buildOptions(CorePrivateClientImpl._getUserActionsOverviewOptions);
 
 	let rawResponse: Response;
 	try {
@@ -700,4 +669,14 @@ class CorePrivateClientImpl {
 	    throw new CoreError(`Could not retrieve actions overview - service response ${rawResponse.status}`);
 	}	
     }
+
+    private _buildOptions(template: RequestInit, session: Session|null = null) {
+        const options = (Object as any).assign({headers: this._defaultHeaders}, template);
+
+        if (session != null) {
+            options.headers = (Object as any).assign(options.headers, {[Session.XsrfTokenHeaderName]: session.xsrfToken});
+        }
+
+        return options;
+    }        
 }
