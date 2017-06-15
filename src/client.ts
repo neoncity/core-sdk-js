@@ -58,7 +58,7 @@ export interface UpdateCauseOptions {
 
 
 export interface CorePublicClient {
-    withContext(authInfo: AuthInfo|null, origin: string|nul): CorePublicClient;
+    withContext(authInfo: AuthInfo|null, origin: string|null): CorePublicClient;
     getAllCauseSummaries(): Promise<CauseSummary[]>;
     getCauses(): Promise<PublicCause[]>;
     getCause(causeId: number): Promise<PublicCause>;
