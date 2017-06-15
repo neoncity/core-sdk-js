@@ -191,7 +191,7 @@ class CorePublicClientImpl {
 
         let rawResponse: Response;
         try {
-            rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/all-cause-summaries`, options);
+            rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/summaries`, options);
         } catch (e) {
             throw new CoreError(`Could not retrieve cause summaries - request failed because '${e.toString()}'`);
         }
