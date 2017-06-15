@@ -57,7 +57,7 @@ export interface UpdateCauseOptions {
 
 
 export interface CorePublicClient {
-    withAuthInfo(authInfo: AuthInfo): CorePublicClient;
+    withContext(authInfo: AuthInfo, origin: string): CorePublicClient;
     getCauses(): Promise<PublicCause[]>;
     getCause(causeId: number): Promise<PublicCause>;
     createDonation(session: Session, causeId: number, amount: CurrencyAmount): Promise<DonationForSession>;
@@ -66,7 +66,7 @@ export interface CorePublicClient {
 
 
 export interface CorePrivateClient {
-    withAuthInfo(authInfo: AuthInfo): CorePrivateClient;
+    withContext(authInfo: AuthInfo, origin: string): CorePrivateClient;
     createCause(session: Session, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause>;
     getCause(): Promise<PrivateCause>;
     updateCause(session: Session, updateOptions: UpdateCauseOptions): Promise<PrivateCause>;

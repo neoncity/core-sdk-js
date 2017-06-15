@@ -108,7 +108,9 @@ class CorePublicClientImpl {
     private readonly _publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>;
     private readonly _sessionDonationResponseMarshaller: Marshaller<SessionDonationResponse>;
     private readonly _sessionShareResponseMarshaller: Marshaller<SessionShareResponse>;
+    private readonly _hasContext: boolean;
     private readonly _authInfo: AuthInfo|null;
+    private readonly _origin: string|null;
     private readonly _protocol: string;
     
     constructor(
@@ -121,7 +123,8 @@ class CorePublicClientImpl {
 	publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>,
 	sessionDonationResponseMarshaller: Marshaller<SessionDonationResponse>,
 	sessionShareResponseMarshaller: Marshaller<SessionShareResponse>,
-	authInfo: AuthInfo|null = null) {
+	authInfo: AuthInfo|null = null,
+        origin: string|null = null) {
 	this._env = env;
 	this._coreServiceHost = coreServiceHost;
 	this._authInfoMarshaller = authInfoMarshaller;
@@ -131,7 +134,9 @@ class CorePublicClientImpl {
 	this._publicCauseResponseMarshaller = publicCauseResponseMarshaller;
 	this._sessionDonationResponseMarshaller = sessionDonationResponseMarshaller;
 	this._sessionShareResponseMarshaller = sessionShareResponseMarshaller;
+        this._hasContext = authInfo != null && origin != null;
 	this._authInfo = authInfo;
+        this._origin = origin;
 
 	if (isLocal(this._env)) {
 	    this._protocol = 'http';
@@ -140,7 +145,7 @@ class CorePublicClientImpl {
 	}	
     }
 
-    withAuthInfo(authInfo: AuthInfo): CorePublicClient {
+    withContext(authInfo: AuthInfo, origin: string): CorePublicClient {
 	return new CorePublicClientImpl(
 	    this._env,
 	    this._coreServiceHost,
@@ -151,14 +156,18 @@ class CorePublicClientImpl {
 	    this._publicCauseResponseMarshaller,
 	    this._sessionDonationResponseMarshaller,
 	    this._sessionShareResponseMarshaller,
-	    authInfo);
+	    authInfo,
+            origin);
     }
     
     async getCauses(): Promise<PublicCause[]> {
 	const options = (Object as any).assign({}, CorePublicClientImpl._getCausesOptions);
 
-	if (this._authInfo != null) {
-	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	if (this._hasContext) {
+	    options.headers = {
+                [AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo)),
+                'Origin': this._origin
+            };
 	}
 
         let rawResponse: Response;
@@ -187,8 +196,11 @@ class CorePublicClientImpl {
     async getCause(causeId: number): Promise<PublicCause> {
 	const options = (Object as any).assign({}, CorePublicClientImpl._getCauseOptions);
 
-	if (this._authInfo != null) {
-	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	if (this._hasContext) {
+	    options.headers = {
+                [AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo)),
+                'Origin': this._origin
+            };
 	}
 
 	let rawResponse: Response;
@@ -226,8 +238,9 @@ class CorePublicClientImpl {
 	    body: JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest))
 	});
 
-	if (this._authInfo != null) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
+	if (this._hasContext) {
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
+            options.headers['Origin'] = this._origin;
 	}
 
 	let rawResponse: Response;
@@ -265,8 +278,9 @@ class CorePublicClientImpl {
 	    body: JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest))
 	});
 
-	if (this._authInfo != null) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
+	if (this._hasContext) {
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
+            options.headers['Origin'] = this._origin;
 	}
 
 	let rawResponse: Response;
@@ -377,7 +391,9 @@ class CorePrivateClientImpl {
     private readonly _privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>;
     private readonly _causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>;
     private readonly _userActionsOverviewResponseMarshaller: Marshaller<UserActionsOverviewResponse>;
+    private readonly _hasContext: boolean;
     private readonly _authInfo: AuthInfo|null;
+    private readonly _origin: string|null;
     private readonly _protocol: string;
 
     constructor(
@@ -389,7 +405,8 @@ class CorePrivateClientImpl {
 	privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>,
 	causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>,
 	userActionsOverviewResponseMarshaller: Marshaller<UserActionsOverviewResponse>,
-	authInfo: AuthInfo|null = null) {
+	authInfo: AuthInfo|null = null,
+        origin: string|null = null) {
 	this._env = env;
         this._coreServiceHost = coreServiceHost;
         this._authInfoMarshaller = authInfoMarshaller;
@@ -398,7 +415,9 @@ class CorePrivateClientImpl {
 	this._privateCauseResponseMarshaller = privateCauseResponseMarshaller;
 	this._causeAnalyticsResponseMarshaller = causeAnalyticsResponseMarshaller;
 	this._userActionsOverviewResponseMarshaller = userActionsOverviewResponseMarshaller;
+        this._hasContext = authInfo != null && origin != null;
 	this._authInfo = authInfo;
+        this._origin = origin;
 
 	if (isLocal(this._env)) {
 	    this._protocol = 'http';
@@ -407,7 +426,7 @@ class CorePrivateClientImpl {
 	}	
     }
 
-    withAuthInfo(authInfo: AuthInfo): CorePrivateClient {
+    withContext(authInfo: AuthInfo, origin: string): CorePrivateClient {
 	return new CorePrivateClientImpl(
 	    this._env,
 	    this._coreServiceHost,
@@ -417,7 +436,8 @@ class CorePrivateClientImpl {
 	    this._privateCauseResponseMarshaller,
 	    this._causeAnalyticsResponseMarshaller,
 	    this._userActionsOverviewResponseMarshaller,
-	    authInfo);
+	    authInfo,
+            origin);
     }
 
     async createCause(session: Session, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
@@ -437,8 +457,9 @@ class CorePrivateClientImpl {
 	    body: JSON.stringify(this._createCauseRequestMarshaller.pack(createCauseRequest))
 	});
 
-	if (this._authInfo != null) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
+	if (this._hasContext) {
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
+            options.headers['Origin'] = this._origin;
 	}
 
 	let rawResponse: Response;
@@ -472,8 +493,11 @@ class CorePrivateClientImpl {
     async getCause(): Promise<PrivateCause> {
 	const options = (Object as any).assign({}, CorePrivateClientImpl._getCauseOptions);
 
-	if (this._authInfo != null) {
-	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	if (this._hasContext) {
+	    options.headers = {
+                [AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo)),
+                'Origin': this._origin
+            };
 	}
 
 	let rawResponse: Response;
@@ -522,8 +546,9 @@ class CorePrivateClientImpl {
 	    body: JSON.stringify(this._updateCauseRequestMarshaller.pack(updateCauseRequest))
 	});
 
-	if (this._authInfo != null) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
+	if (this._hasContext) {
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
+            options.headers['Origin'] = this._origin;
 	}	
 
 	let rawResponse: Response;
@@ -561,8 +586,9 @@ class CorePrivateClientImpl {
 
         options.headers = {[Session.XsrfTokenHeaderName]: session.xsrfToken};
 
-	if (this._authInfo != null) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo));
+	if (this._hasContext) {
+	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
+            options.headers['Origin'] = this._origin;
 	}
 
 	let rawResponse: Response;
@@ -586,8 +612,9 @@ class CorePrivateClientImpl {
     async getCauseAnalytics(): Promise<CauseAnalytics> {
 	const options = (Object as any).assign({}, CorePrivateClientImpl._getCauseAnalyticsOptions);
 
-	if (this._authInfo != null) {
-	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	if (this._hasContext) {
+	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo))};
+            options.headers['Origin'] = this._origin;
 	}
 
 	let rawResponse: Response;
@@ -618,8 +645,9 @@ class CorePrivateClientImpl {
     async getUserActionsOverview(): Promise<UserActionsOverview> {
 	const options = (Object as any).assign({}, CorePrivateClientImpl._getUserActionsOverviewOptions);
 
-	if (this._authInfo != null) {
-	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo))};
+	if (this._hasContext) {
+	    options.headers = {[AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo))};
+            options.headers['Origin'] = this._origin;
 	}
 
 	let rawResponse: Response;
