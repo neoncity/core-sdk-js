@@ -4,6 +4,7 @@ import { AuthInfo, Session } from '@neoncity/identity-sdk-js'
 
 import {
     BankInfo,
+    CauseSummary,
     CauseAnalytics,
     CurrencyAmount,
     DonationForSession,
@@ -58,6 +59,7 @@ export interface UpdateCauseOptions {
 
 export interface CorePublicClient {
     withContext(authInfo: AuthInfo, origin: string): CorePublicClient;
+    getAllCauseSummaries(): Promise<CauseSummary[]>;
     getCauses(): Promise<PublicCause[]>;
     getCause(causeId: number): Promise<PublicCause>;
     createDonation(session: Session, causeId: number, amount: CurrencyAmount): Promise<DonationForSession>;

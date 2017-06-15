@@ -153,6 +153,18 @@ export class BankInfoMarshaller implements Marshaller<BankInfo> {
 }
 
 
+export class CauseSummary {
+    @MarshalWith(r.IdMarshaller)
+    id: number;
+
+    @MarshalWith(r.SlugMarshaller)
+    slug: string;
+
+    @MarshalWith(r.TimeMarshaller)
+    timeLastUpdated: Date;
+}
+
+
 export class Cause {
     @MarshalWith(r.IdMarshaller)
     id: number;

@@ -16,6 +16,7 @@ import {
 import {
     BankInfo,
     CauseAnalytics,
+    CauseSummary,
     CurrencyAmount,
     DonationForSession,
     PictureSet,
@@ -29,6 +30,7 @@ import {
     CreateShareRequest,
     UpdateCauseRequest } from './requests'
 import {
+    AllCauseSummariesResponse,
     CauseAnalyticsResponse,
     PrivateCauseResponse,
     PrivateCauseResponseMarshaller,
@@ -42,12 +44,13 @@ import {
 
 export function newCorePublicClient(env: Env, coreServiceHost: string): CorePublicClient {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
-    const createDonationRequestMarshaller = new (MarshalFrom(CreateDonationRequest));
-    const createShareRequestMarshaller = new (MarshalFrom(CreateShareRequest));
-    const publicCausesResponseMarshaller = new (MarshalFrom(PublicCausesResponse));
-    const publicCauseResponseMarshaller = new (MarshalFrom(PublicCauseResponse));
-    const sessionDonationResponseMarshaller = new (MarshalFrom(SessionDonationResponse));
-    const sessionShareResponseMarshaller = new (MarshalFrom(SessionShareResponse));
+    const createDonationRequestMarshaller = new (MarshalFrom(CreateDonationRequest))();
+    const createShareRequestMarshaller = new (MarshalFrom(CreateShareRequest))();
+    const allCauseSummariesResponseMarshaller = new (MarshalFrom(AllCauseSummariesResponse))();
+    const publicCausesResponseMarshaller = new (MarshalFrom(PublicCausesResponse))();
+    const publicCauseResponseMarshaller = new (MarshalFrom(PublicCauseResponse))();
+    const sessionDonationResponseMarshaller = new (MarshalFrom(SessionDonationResponse))();
+    const sessionShareResponseMarshaller = new (MarshalFrom(SessionShareResponse))();
     
     return new CorePublicClientImpl(
 	env,
@@ -55,6 +58,7 @@ export function newCorePublicClient(env: Env, coreServiceHost: string): CorePubl
         authInfoMarshaller,
 	createDonationRequestMarshaller,
 	createShareRequestMarshaller,
+        allCauseSummariesResponseMarshaller,
         publicCausesResponseMarshaller,
 	publicCauseResponseMarshaller,
 	sessionDonationResponseMarshaller,
@@ -63,6 +67,15 @@ export function newCorePublicClient(env: Env, coreServiceHost: string): CorePubl
 
 
 class CorePublicClientImpl {
+    private static readonly _getAllCauseSummariesOptions: RequestInit = {
+	method: 'GET',
+	mode: 'cors',
+	cache: 'no-cache',
+	redirect: 'error',
+	referrer: 'client',
+	credentials: 'include'
+    };
+    
     private static readonly _getCausesOptions: RequestInit = {
 	method: 'GET',
 	mode: 'cors',
@@ -104,13 +117,14 @@ class CorePublicClientImpl {
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
     private readonly _createDonationRequestMarshaller: Marshaller<CreateDonationRequest>;
     private readonly _createShareRequestMarshaller: Marshaller<CreateShareRequest>;
+    private readonly _allCauseSummariesResponseMarshaller: Marshaller<AllCauseSummariesResponse>;
     private readonly _publicCausesResponseMarshaller: Marshaller<PublicCausesResponse>;
     private readonly _publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>;
     private readonly _sessionDonationResponseMarshaller: Marshaller<SessionDonationResponse>;
     private readonly _sessionShareResponseMarshaller: Marshaller<SessionShareResponse>;
-    private readonly _hasContext: boolean;
     private readonly _authInfo: AuthInfo|null;
     private readonly _origin: string|null;
+    private readonly _defaultHeaders: HeadersInit;
     private readonly _protocol: string;
     
     constructor(
@@ -119,6 +133,7 @@ class CorePublicClientImpl {
 	authInfoMarshaller: Marshaller<AuthInfo>,
 	createDonationRequestMarshaller: Marshaller<CreateDonationRequest>,
 	createShareRequestMarshaller: Marshaller<CreateShareRequest>,
+        allCauseSummariesResponseMarshaller: Marshaller<AllCauseSummariesResponse>,
         publicCausesResponseMarshaller: Marshaller<PublicCausesResponse>,
 	publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>,
 	sessionDonationResponseMarshaller: Marshaller<SessionDonationResponse>,
@@ -130,14 +145,24 @@ class CorePublicClientImpl {
 	this._authInfoMarshaller = authInfoMarshaller;
 	this._createDonationRequestMarshaller = createDonationRequestMarshaller;
 	this._createShareRequestMarshaller = createShareRequestMarshaller;
+        this._allCauseSummariesResponseMarshaller = allCauseSummariesResponseMarshaller;
         this._publicCausesResponseMarshaller = publicCausesResponseMarshaller;
 	this._publicCauseResponseMarshaller = publicCauseResponseMarshaller;
 	this._sessionDonationResponseMarshaller = sessionDonationResponseMarshaller;
 	this._sessionShareResponseMarshaller = sessionShareResponseMarshaller;
-        this._hasContext = authInfo != null && origin != null;
 	this._authInfo = authInfo;
         this._origin = origin;
 
+        this._defaultHeaders = {};
+        
+        if (authInfo != null) {
+            this._defaultHeaders[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(authInfo));
+        }
+
+        if (origin != null) {
+            this._defaultHeaders['Origin'] = origin;
+        }
+        
 	if (isLocal(this._env)) {
 	    this._protocol = 'http';
 	} else {
@@ -145,13 +170,14 @@ class CorePublicClientImpl {
 	}	
     }
 
-    withContext(authInfo: AuthInfo, origin: string): CorePublicClient {
+    withContext(authInfo: AuthInfo|null, origin: string|null): CorePublicClient {
 	return new CorePublicClientImpl(
 	    this._env,
 	    this._coreServiceHost,
 	    this._authInfoMarshaller,
 	    this._createDonationRequestMarshaller,
 	    this._createShareRequestMarshaller,
+            this._allCauseSummariesResponseMarshaller,
 	    this._publicCausesResponseMarshaller,
 	    this._publicCauseResponseMarshaller,
 	    this._sessionDonationResponseMarshaller,
@@ -159,16 +185,35 @@ class CorePublicClientImpl {
 	    authInfo,
             origin);
     }
+
+    async getAllCauseSummaries(): Promise<CauseSummary[]> {
+	const options = this._buildOptions(CorePublicClientImpl._getAllCauseSummariesOptions);
+
+        let rawResponse: Response;
+        try {
+            rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/all-cause-summaries`, options);
+        } catch (e) {
+            throw new CoreError(`Could not retrieve cause summaries - request failed because '${e.toString()}'`);
+        }
+
+        if (rawResponse.ok) {
+            try {
+                const jsonResponse = await rawResponse.json();
+                const allCauseSummariesResponse = this._allCauseSummariesResponseMarshaller.extract(jsonResponse);
+
+                return allCauseSummariesResponse.causeSummaries;
+            } catch (e) {
+                throw new CoreError(`Could not retrieve cause summaries - '${e.toString()}'`);
+            }
+        } else if (rawResponse.status == HttpStatus.UNAUTHORIZED) {
+	    throw new UnauthorizedCoreError('User is not authorized');
+	} else {
+            throw new CoreError(`Could not retrieve cause summaries - service response ${rawResponse.status}`);
+        }
+    }
     
     async getCauses(): Promise<PublicCause[]> {
-	const options = (Object as any).assign({}, CorePublicClientImpl._getCausesOptions);
-
-	if (this._hasContext) {
-	    options.headers = {
-                [AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo)),
-                'Origin': this._origin
-            };
-	}
+	const options = this._buildOptions(CorePublicClientImpl._getCausesOptions);
 
         let rawResponse: Response;
         try {
@@ -194,14 +239,7 @@ class CorePublicClientImpl {
     }
 
     async getCause(causeId: number): Promise<PublicCause> {
-	const options = (Object as any).assign({}, CorePublicClientImpl._getCauseOptions);
-
-	if (this._hasContext) {
-	    options.headers = {
-                [AuthInfo.HeaderName]: JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo)),
-                'Origin': this._origin
-            };
-	}
+	const options = this._buildOptions(CorePublicClientImpl._getCauseOptions);
 
 	let rawResponse: Response;
 	try {
@@ -230,18 +268,8 @@ class CorePublicClientImpl {
 	const createDonationRequest = new CreateDonationRequest();
 	createDonationRequest.amount = amount;
 
-        const options = (Object as any).assign({}, CorePublicClientImpl._createDonationOptions, {
-	    headers: {
-                'Content-Type': 'application/json',
-                [Session.XsrfTokenHeaderName]: session.xsrfToken
-            },
-	    body: JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest))
-	});
-
-	if (this._hasContext) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
-            options.headers['Origin'] = this._origin;
-	}
+        const options = this._buildOptions(CorePublicClientImpl._createDonationOptions, session);
+        options.body = JSON.stringify(this._createDonationRequestMarshaller.pack(createDonationRequest));
 
 	let rawResponse: Response;
 	try {
@@ -266,22 +294,12 @@ class CorePublicClientImpl {
 	}	
     }
 
-        async createShare(session: Session, causeId: number, facebookPostId: string): Promise<ShareForSession> {
+    async createShare(session: Session, causeId: number, facebookPostId: string): Promise<ShareForSession> {
 	const createShareRequest = new CreateShareRequest();
         createShareRequest.facebookPostId = facebookPostId;
 
-        const options = (Object as any).assign({}, CorePublicClientImpl._createShareOptions, {
-	    headers: {
-                'Content-Type': 'application/json',
-                [Session.XsrfTokenHeaderName]: session.xsrfToken
-            },
-	    body: JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest))
-	});
-
-	if (this._hasContext) {
-	    options.headers[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(this._authInfo as AuthInfo));
-            options.headers['Origin'] = this._origin;
-	}
+        const options = this._buildOptions(CorePublicClientImpl._createShareOptions, session);
+        options.body = JSON.stringify(this._createShareRequestMarshaller.pack(createShareRequest));
 
 	let rawResponse: Response;
 	try {
@@ -304,6 +322,16 @@ class CorePublicClientImpl {
 	} else {
 	    throw new CoreError(`Could not create share for cause ${causeId} - service response ${rawResponse.status}`);
 	}	
+    }
+
+    private _buildOptions(template: RequestInit, session: Session|null = null) {
+        const options = (Object as any).assign({headers: this._defaultHeaders}, template);
+
+        if (session != null) {
+            options.headers = (Object as any).assign(options.headers, {[Session.XsrfTokenHeaderName]: session.xsrfToken});
+        }
+
+        return options;
     }
 }
 

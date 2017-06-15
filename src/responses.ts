@@ -3,11 +3,18 @@ import { ArrayOf, ExtractError, Marshaller, MarshalFrom, MarshalWith, ObjectMars
 
 import {
     CauseAnalytics,
+    CauseSummary,
     DonationForSession,
     PrivateCause,
     PublicCause,
     ShareForSession,
     UserActionsOverview } from './entities'
+
+
+export class AllCauseSummariesResponse {
+    @MarshalWith(ArrayOf(MarshalFrom(CauseSummary)))
+    causeSummaries: CauseSummary[];
+}
 
 
 export class PublicCausesResponse {
