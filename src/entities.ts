@@ -293,9 +293,18 @@ export class ShareForSession {
 
 
 export class UserActionsOverview {
+    @MarshalWith(r.NonNegativeIntegerMarshaller)
+    donationsCount: number;
+
+    @MarshalWith(ArrayOf(MarshalFrom(CurrencyAmount)))
+    amountsDonatedByCurrency: CurrencyAmount[];
+
+    @MarshalWith(r.NonNegativeIntegerMarshaller)
+    sharesCount: number;
+    
     @MarshalWith(ArrayOf(MarshalFrom(DonationForSession)))
-    donations: DonationForSession[];
+    latestDonations: DonationForSession[];
 
     @MarshalWith(ArrayOf(MarshalFrom(ShareForSession)))
-    shares: ShareForSession[];
+    latestShares: ShareForSession[];
 }
