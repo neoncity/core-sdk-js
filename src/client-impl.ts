@@ -42,7 +42,7 @@ import {
 
 
 
-export function newCorePublicClient(env: Env, coreServiceHost: string, webFetcher: WebFetcher): CorePublicClient {
+export function newCorePublicClient(env: Env, origin: string, coreServiceHost: string, webFetcher: WebFetcher): CorePublicClient {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createDonationRequestMarshaller = new (MarshalFrom(CreateDonationRequest))();
     const createShareRequestMarshaller = new (MarshalFrom(CreateShareRequest))();
@@ -54,6 +54,7 @@ export function newCorePublicClient(env: Env, coreServiceHost: string, webFetche
     
     return new CorePublicClientImpl(
 	env,
+	origin,
         coreServiceHost,
         webFetcher,
         authInfoMarshaller,
@@ -70,50 +71,41 @@ export function newCorePublicClient(env: Env, coreServiceHost: string, webFetche
 class CorePublicClientImpl {
     private static readonly _getAllCauseSummariesOptions: RequestInit = {
 	method: 'GET',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'
     };
     
     private static readonly _getCausesOptions: RequestInit = {
 	method: 'GET',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'
     };
 
     private static readonly _getCauseOptions: RequestInit = {
 	method: 'GET',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'
     };
 
     private static readonly _createDonationOptions: RequestInit = {
 	method: 'POST',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'	
     };
 
     private static readonly _createShareOptions: RequestInit = {
 	method: 'POST',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'	
     };
 
     private readonly _env: Env;
+    private readonly _origin: string;
     private readonly _coreServiceHost: string;
     private readonly _webFetcher: WebFetcher;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
@@ -125,12 +117,12 @@ class CorePublicClientImpl {
     private readonly _sessionDonationResponseMarshaller: Marshaller<SessionDonationResponse>;
     private readonly _sessionShareResponseMarshaller: Marshaller<SessionShareResponse>;
     private readonly _authInfo: AuthInfo|null;
-    private readonly _origin: string|null;
     private readonly _defaultHeaders: HeadersInit;
     private readonly _protocol: string;
     
     constructor(
 	env: Env,
+	origin: string,
 	coreServiceHost: string,
         webFetcher: WebFetcher,
 	authInfoMarshaller: Marshaller<AuthInfo>,
@@ -141,9 +133,9 @@ class CorePublicClientImpl {
 	publicCauseResponseMarshaller: Marshaller<PublicCauseResponse>,
 	sessionDonationResponseMarshaller: Marshaller<SessionDonationResponse>,
 	sessionShareResponseMarshaller: Marshaller<SessionShareResponse>,
-	authInfo: AuthInfo|null = null,
-        origin: string|null = null) {
+	authInfo: AuthInfo|null = null) {
 	this._env = env;
+	this._origin = origin;
 	this._coreServiceHost = coreServiceHost;
         this._webFetcher = webFetcher;
 	this._authInfoMarshaller = authInfoMarshaller;
@@ -155,16 +147,13 @@ class CorePublicClientImpl {
 	this._sessionDonationResponseMarshaller = sessionDonationResponseMarshaller;
 	this._sessionShareResponseMarshaller = sessionShareResponseMarshaller;
 	this._authInfo = authInfo;
-        this._origin = origin;
 
-        this._defaultHeaders = {};
+        this._defaultHeaders = {
+	    'Origin': origin
+	};
         
         if (authInfo != null) {
             this._defaultHeaders[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(authInfo));
-        }
-
-        if (origin != null) {
-            this._defaultHeaders['Origin'] = origin;
         }
         
 	if (isLocal(this._env)) {
@@ -174,9 +163,10 @@ class CorePublicClientImpl {
 	}	
     }
 
-    withContext(authInfo: AuthInfo|null, origin: string|null): CorePublicClient {
+    withContext(authInfo: AuthInfo): CorePublicClient {
 	return new CorePublicClientImpl(
 	    this._env,
+	    this._origin,
 	    this._coreServiceHost,
             this._webFetcher,
 	    this._authInfoMarshaller,
@@ -187,8 +177,7 @@ class CorePublicClientImpl {
 	    this._publicCauseResponseMarshaller,
 	    this._sessionDonationResponseMarshaller,
 	    this._sessionShareResponseMarshaller,
-	    authInfo,
-            origin);
+	    authInfo);
     }
 
     async getAllCauseSummaries(): Promise<CauseSummary[]> {
@@ -343,7 +332,7 @@ class CorePublicClientImpl {
 }
 
 
-export function newCorePrivateClient(env: Env, coreServiceHost: string, webFetcher: WebFetcher): CorePrivateClient {
+export function newCorePrivateClient(env: Env, origin: string, coreServiceHost: string, webFetcher: WebFetcher): CorePrivateClient {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest))();
     const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest))();
@@ -353,6 +342,7 @@ export function newCorePrivateClient(env: Env, coreServiceHost: string, webFetch
     
     return new CorePrivateClientImpl(
 	env,
+	origin,
         coreServiceHost,
         webFetcher,
         authInfoMarshaller,
@@ -367,59 +357,48 @@ export function newCorePrivateClient(env: Env, coreServiceHost: string, webFetch
 class CorePrivateClientImpl {
     private static readonly _createCauseOptions: RequestInit = {
 	method: 'POST',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'
     };
 
     private static readonly _getCauseOptions: RequestInit = {
 	method: 'GET',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'
     };
 
     private static readonly _updateCauseOptions: RequestInit = {
 	method: 'PUT',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'
     };    
 
     private static readonly _deleteCauseOptions: RequestInit = {
 	method: 'DELETE',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'
     };
 
     private static readonly _getCauseAnalyticsOptions: RequestInit = {
 	method: 'GET',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'
     };
 
     private static readonly _getUserActionsOverviewOptions: RequestInit = {
 	method: 'GET',
-	mode: 'cors',
 	cache: 'no-cache',
 	redirect: 'error',
 	referrer: 'client',
-	credentials: 'include'
     };    
 
     private readonly _env: Env;
+    private readonly _origin: string;
     private readonly _coreServiceHost: string;
     private readonly _webFetcher: WebFetcher;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
@@ -429,12 +408,12 @@ class CorePrivateClientImpl {
     private readonly _causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>;
     private readonly _userActionsOverviewResponseMarshaller: Marshaller<UserActionsOverviewResponse>;
     private readonly _authInfo: AuthInfo|null;
-    private readonly _origin: string|null;
     private readonly _defaultHeaders: HeadersInit;
     private readonly _protocol: string;
 
     constructor(
 	env: Env,
+	origin: string,
         coreServiceHost: string,
         webFetcher: WebFetcher,
         authInfoMarshaller: Marshaller<AuthInfo>,
@@ -443,9 +422,9 @@ class CorePrivateClientImpl {
 	privateCauseResponseMarshaller: Marshaller<PrivateCauseResponse>,
 	causeAnalyticsResponseMarshaller: Marshaller<CauseAnalyticsResponse>,
 	userActionsOverviewResponseMarshaller: Marshaller<UserActionsOverviewResponse>,
-	authInfo: AuthInfo|null = null,
-        origin: string|null = null) {
+	authInfo: AuthInfo|null = null) {
 	this._env = env;
+	this._origin = origin;
         this._coreServiceHost = coreServiceHost;
         this._webFetcher = webFetcher;
         this._authInfoMarshaller = authInfoMarshaller;
@@ -455,16 +434,13 @@ class CorePrivateClientImpl {
 	this._causeAnalyticsResponseMarshaller = causeAnalyticsResponseMarshaller;
 	this._userActionsOverviewResponseMarshaller = userActionsOverviewResponseMarshaller;
 	this._authInfo = authInfo;
-        this._origin = origin;
 
-        this._defaultHeaders = {};
+        this._defaultHeaders = {
+	    'Origin': origin
+	};
         
         if (authInfo != null) {
             this._defaultHeaders[AuthInfo.HeaderName] = JSON.stringify(this._authInfoMarshaller.pack(authInfo));
-        }
-
-        if (origin != null) {
-            this._defaultHeaders['Origin'] = origin;
         }
         
 	if (isLocal(this._env)) {
@@ -474,9 +450,10 @@ class CorePrivateClientImpl {
 	}	
     }
 
-    withContext(authInfo: AuthInfo|null, origin: string|null): CorePrivateClient {
+    withContext(authInfo: AuthInfo): CorePrivateClient {
 	return new CorePrivateClientImpl(
 	    this._env,
+	    this._origin,
 	    this._coreServiceHost,
             this._webFetcher,
 	    this._authInfoMarshaller,
@@ -485,8 +462,7 @@ class CorePrivateClientImpl {
 	    this._privateCauseResponseMarshaller,
 	    this._causeAnalyticsResponseMarshaller,
 	    this._userActionsOverviewResponseMarshaller,
-	    authInfo,
-            origin);
+	    authInfo);
     }
 
     async createCause(session: Session, title: string, description: string, pictureSet: PictureSet, deadline: Date, goal: CurrencyAmount, bankInfo: BankInfo): Promise<PrivateCause> {
