@@ -2,7 +2,7 @@ import 'isomorphic-fetch'
 import * as HttpStatus from 'http-status-codes'
 import { Marshaller, MarshalFrom } from 'raynor'
 
-import { isLocal, Env } from '@neoncity/common-js'
+import { isLocal, Env, WebFetcher } from '@neoncity/common-js'
 import { AuthInfo, Session } from '@neoncity/identity-sdk-js'
 
 import {
@@ -42,7 +42,7 @@ import {
 
 
 
-export function newCorePublicClient(env: Env, coreServiceHost: string): CorePublicClient {
+export function newCorePublicClient(env: Env, coreServiceHost: string, webFetcher: WebFetcher): CorePublicClient {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createDonationRequestMarshaller = new (MarshalFrom(CreateDonationRequest))();
     const createShareRequestMarshaller = new (MarshalFrom(CreateShareRequest))();
@@ -55,6 +55,7 @@ export function newCorePublicClient(env: Env, coreServiceHost: string): CorePubl
     return new CorePublicClientImpl(
 	env,
         coreServiceHost,
+        webFetcher,
         authInfoMarshaller,
 	createDonationRequestMarshaller,
 	createShareRequestMarshaller,
@@ -114,6 +115,7 @@ class CorePublicClientImpl {
 
     private readonly _env: Env;
     private readonly _coreServiceHost: string;
+    private readonly _webFetcher: WebFetcher;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
     private readonly _createDonationRequestMarshaller: Marshaller<CreateDonationRequest>;
     private readonly _createShareRequestMarshaller: Marshaller<CreateShareRequest>;
@@ -130,6 +132,7 @@ class CorePublicClientImpl {
     constructor(
 	env: Env,
 	coreServiceHost: string,
+        webFetcher: WebFetcher,
 	authInfoMarshaller: Marshaller<AuthInfo>,
 	createDonationRequestMarshaller: Marshaller<CreateDonationRequest>,
 	createShareRequestMarshaller: Marshaller<CreateShareRequest>,
@@ -142,6 +145,7 @@ class CorePublicClientImpl {
         origin: string|null = null) {
 	this._env = env;
 	this._coreServiceHost = coreServiceHost;
+        this._webFetcher = webFetcher;
 	this._authInfoMarshaller = authInfoMarshaller;
 	this._createDonationRequestMarshaller = createDonationRequestMarshaller;
 	this._createShareRequestMarshaller = createShareRequestMarshaller;
@@ -174,6 +178,7 @@ class CorePublicClientImpl {
 	return new CorePublicClientImpl(
 	    this._env,
 	    this._coreServiceHost,
+            this._webFetcher,
 	    this._authInfoMarshaller,
 	    this._createDonationRequestMarshaller,
 	    this._createShareRequestMarshaller,
@@ -191,7 +196,7 @@ class CorePublicClientImpl {
 
         let rawResponse: Response;
         try {
-            rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/summaries`, options);
+            rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/summaries`, options);
         } catch (e) {
             throw new CoreError(`Could not retrieve cause summaries - request failed because '${e.toString()}'`);
         }
@@ -217,7 +222,7 @@ class CorePublicClientImpl {
 
         let rawResponse: Response;
         try {
-            rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes`, options);
+            rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/public/causes`, options);
         } catch (e) {
             throw new CoreError(`Could not retrieve causes - request failed because '${e.toString()}'`);
         }
@@ -243,7 +248,7 @@ class CorePublicClientImpl {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/${causeId}`, options);
+	    rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/${causeId}`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -274,7 +279,7 @@ class CorePublicClientImpl {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/${causeId}/donations`, options);
+	    rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/${causeId}/donations`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create donation for cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -305,7 +310,7 @@ class CorePublicClientImpl {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/${causeId}/shares`, options);
+	    rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/public/causes/${causeId}/shares`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create share for cause ${causeId} - request failed because '${e.toString()}'`);
 	}
@@ -338,7 +343,7 @@ class CorePublicClientImpl {
 }
 
 
-export function newCorePrivateClient(env: Env, coreServiceHost: string): CorePrivateClient {
+export function newCorePrivateClient(env: Env, coreServiceHost: string, webFetcher: WebFetcher): CorePrivateClient {
     const authInfoMarshaller = new (MarshalFrom(AuthInfo))();
     const createCauseRequestMarshaller = new (MarshalFrom(CreateCauseRequest))();
     const updateCauseRequestMarshaller = new (MarshalFrom(UpdateCauseRequest))();
@@ -349,6 +354,7 @@ export function newCorePrivateClient(env: Env, coreServiceHost: string): CorePri
     return new CorePrivateClientImpl(
 	env,
         coreServiceHost,
+        webFetcher,
         authInfoMarshaller,
 	createCauseRequestMarshaller,
 	updateCauseRequestMarshaller,
@@ -415,6 +421,7 @@ class CorePrivateClientImpl {
 
     private readonly _env: Env;
     private readonly _coreServiceHost: string;
+    private readonly _webFetcher: WebFetcher;
     private readonly _authInfoMarshaller: Marshaller<AuthInfo>;
     private readonly _createCauseRequestMarshaller: Marshaller<CreateCauseRequest>;
     private readonly _updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>;
@@ -429,6 +436,7 @@ class CorePrivateClientImpl {
     constructor(
 	env: Env,
         coreServiceHost: string,
+        webFetcher: WebFetcher,
         authInfoMarshaller: Marshaller<AuthInfo>,
 	createCauseRequestMarshaller: Marshaller<CreateCauseRequest>,
 	updateCauseRequestMarshaller: Marshaller<UpdateCauseRequest>,
@@ -439,6 +447,7 @@ class CorePrivateClientImpl {
         origin: string|null = null) {
 	this._env = env;
         this._coreServiceHost = coreServiceHost;
+        this._webFetcher = webFetcher;
         this._authInfoMarshaller = authInfoMarshaller;
 	this._createCauseRequestMarshaller = createCauseRequestMarshaller;
 	this._updateCauseRequestMarshaller = updateCauseRequestMarshaller;
@@ -469,6 +478,7 @@ class CorePrivateClientImpl {
 	return new CorePrivateClientImpl(
 	    this._env,
 	    this._coreServiceHost,
+            this._webFetcher,
 	    this._authInfoMarshaller,
 	    this._createCauseRequestMarshaller,
 	    this._updateCauseRequestMarshaller,
@@ -494,7 +504,7 @@ class CorePrivateClientImpl {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
+	    rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not create cause - request failed because '${e.toString()}'`);
 	}
@@ -525,7 +535,7 @@ class CorePrivateClientImpl {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
+	    rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve cause - request failed because '${e.toString()}'`);
 	}
@@ -567,7 +577,7 @@ class CorePrivateClientImpl {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
+	    rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not update cause - request failed because '${e.toString()}'`);
 	}
@@ -600,7 +610,7 @@ class CorePrivateClientImpl {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
+	    rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/private/causes`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not delete cause - request failed because '${e.toString()}'`);
 	}
@@ -621,7 +631,7 @@ class CorePrivateClientImpl {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/causes/analytics`, options);
+	    rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/private/causes/analytics`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve cause analytics - request failed because '${e.toString()}'`);
 	}
@@ -649,7 +659,7 @@ class CorePrivateClientImpl {
 
 	let rawResponse: Response;
 	try {
-	    rawResponse = await fetch(`${this._protocol}://${this._coreServiceHost}/private/user-actions-overview`, options);
+	    rawResponse = await this._webFetcher.fetch(`${this._protocol}://${this._coreServiceHost}/private/user-actions-overview`, options);
 	} catch (e) {
 	    throw new CoreError(`Could not retrieve actions overview - request failed because '${e.toString()}'`);
 	}
