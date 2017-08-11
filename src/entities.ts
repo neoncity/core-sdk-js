@@ -4,6 +4,7 @@ import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWit
 import { Currency, CurrencyMarshaller, IBAN, IBANMarshaller } from '@neoncity/common-js'
 import { Session } from '@neoncity/identity-sdk-js'
 
+
 export enum CauseState {
     Unknown = 0,
     Active = 1,
@@ -14,41 +15,41 @@ export enum CauseState {
 
 export class TitleMarshaller extends r.MaxLengthStringMarshaller {
     constructor() {
-	super(128);
+        super(128);
     }
 
     filter(s: string): string {
-	var title = s.trim();
+        var title = s.trim();
 
-	if (title == '') {
-	    throw new ExtractError('Expected a non empty string');
-	}
+        if (title == '') {
+            throw new ExtractError('Expected a non empty string');
+        }
 
-	return title;
+        return title;
     }
 }
 
 
 export class DescriptionMarshaller extends r.MaxLengthStringMarshaller {
     constructor() {
-	super(10 * 1024);
+        super(10 * 1024);
     }
 
     filter(s: string): string {
-	var title = s.trim();
+        var title = s.trim();
 
-	if (title == '') {
-	    throw new ExtractError('Expected a non empty string');
-	}
+        if (title == '') {
+            throw new ExtractError('Expected a non empty string');
+        }
 
-	return title;
+        return title;
     }
 }
 
 
 export class FacebookPostIdMarshaller extends r.MaxLengthStringMarshaller {
     private static readonly _numberRegExp: RegExp = new RegExp('^[0-9]+$');
-    
+
     constructor() {
         super(128);
     }
@@ -66,7 +67,7 @@ export class FacebookPostIdMarshaller extends r.MaxLengthStringMarshaller {
 export class Picture {
     @MarshalWith(r.PositiveIntegerMarshaller)
     position: number;
-    
+
     @MarshalWith(r.SecureWebUriMarshaller)
     uri: string;
 
@@ -97,7 +98,7 @@ export class PictureSetMarshaller implements Marshaller<PictureSet> {
 
     extract(raw: any): PictureSet {
         const pictureSet = PictureSetMarshaller._basicMarshaller.extract(raw);
-        
+
         if (pictureSet.pictures.length > PictureSet.MAX_NUMBER_OF_PICTURES) {
             throw new ExtractError('Expected less than MAX_NUMBER_OF_PICTURES');
         }
@@ -128,7 +129,7 @@ export class CurrencyAmount {
 
 export class BankInfo {
     public static readonly MAX_NUMBER_OF_IBANS = 25;
-    
+
     @MarshalWith(ArrayOf(IBANMarshaller))
     ibans: IBAN[];
 }
@@ -301,7 +302,7 @@ export class UserActionsOverview {
 
     @MarshalWith(r.NonNegativeIntegerMarshaller)
     sharesCount: number;
-    
+
     @MarshalWith(ArrayOf(MarshalFrom(DonationForSession)))
     latestDonations: DonationForSession[];
 

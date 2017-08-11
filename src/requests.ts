@@ -9,7 +9,8 @@ import {
     FacebookPostIdMarshaller,
     PictureSet,
     PictureSetMarshaller,
-    TitleMarshaller } from './entities'
+    TitleMarshaller
+} from './entities'
 
 
 export class CreateCauseRequest {
@@ -35,22 +36,22 @@ export class CreateCauseRequest {
 
 export class UpdateCauseRequest {
     @MarshalWith(OptionalOf(TitleMarshaller))
-    title: string|null;
+    title: string | null;
 
     @MarshalWith(OptionalOf(DescriptionMarshaller))
-    description: string|null;
+    description: string | null;
 
     @MarshalWith(OptionalOf(PictureSetMarshaller))
-    pictureSet: PictureSet|null;
+    pictureSet: PictureSet | null;
 
     @MarshalWith(OptionalOf(r.TimeMarshaller))
-    deadline: Date|null;
+    deadline: Date | null;
 
     @MarshalWith(OptionalOf(MarshalFrom(CurrencyAmount)))
-    goal: CurrencyAmount|null;
+    goal: CurrencyAmount | null;
 
     @MarshalWith(OptionalOf(BankInfoMarshaller))
-    bankInfo: BankInfo|null;
+    bankInfo: BankInfo | null;
 }
 
 

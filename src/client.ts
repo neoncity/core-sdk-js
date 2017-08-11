@@ -12,7 +12,8 @@ import {
     PrivateCause,
     PublicCause,
     ShareForSession,
-    UserActionsOverview } from './entities'
+    UserActionsOverview
+} from './entities'
 
 
 export class CoreError extends Error {
@@ -33,8 +34,8 @@ export class UnauthorizedCoreError extends CoreError {
 
 export class CauseDeletedForUserError extends CoreError {
     constructor(message: string) {
-	super(message);
-	this.name = 'CauseDeletedForUserError';
+        super(message);
+        this.name = 'CauseDeletedForUserError';
     }
 }
 

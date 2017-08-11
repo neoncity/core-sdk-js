@@ -8,7 +8,8 @@ import {
     PrivateCause,
     PublicCause,
     ShareForSession,
-    UserActionsOverview } from './entities'
+    UserActionsOverview
+} from './entities'
 
 
 export class AllCauseSummariesResponse {
@@ -32,9 +33,9 @@ export class PublicCauseResponse {
 export class PrivateCauseResponse {
     @MarshalWith(r.BooleanMarshaller)
     causeIsRemoved: boolean;
-    
+
     @MarshalWith(OptionalOf(MarshalFrom(PrivateCause)))
-    cause: PrivateCause|null;
+    cause: PrivateCause | null;
 }
 
 
@@ -43,21 +44,21 @@ export class PrivateCauseResponseMarshaller implements Marshaller<PrivateCauseRe
     private static readonly _basicMarshaller: ObjectMarshaller<PrivateCauseResponse> = new (MarshalFrom(PrivateCauseResponse))();
 
     extract(raw: any): PrivateCauseResponse {
-	const response = PrivateCauseResponseMarshaller._basicMarshaller.extract(raw);
-	
-	if (response.causeIsRemoved && response.cause != null) {
-	    throw new ExtractError('Expected no cause when it is removed');
-	}
+        const response = PrivateCauseResponseMarshaller._basicMarshaller.extract(raw);
 
-	if (!response.causeIsRemoved && response.cause == null) {
-	    throw new ExtractError('Expected a cause when it is not removed');
-	}
-	
-	return response;
+        if (response.causeIsRemoved && response.cause != null) {
+            throw new ExtractError('Expected no cause when it is removed');
+        }
+
+        if (!response.causeIsRemoved && response.cause == null) {
+            throw new ExtractError('Expected a cause when it is not removed');
+        }
+
+        return response;
     }
 
     pack(response: PrivateCauseResponse): any {
-	return PrivateCauseResponseMarshaller._basicMarshaller.pack(response);
+        return PrivateCauseResponseMarshaller._basicMarshaller.pack(response);
     }
 }
 

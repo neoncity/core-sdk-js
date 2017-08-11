@@ -26,7 +26,7 @@ export class CauseEvent {
     @MarshalWith(OptionalOf(OneOf2(
         MarshalFrom(CreateCauseRequest),
         MarshalFrom(UpdateCauseRequest))))
-    data: CreateCauseRequest|UpdateCauseRequest|null;
+    data: CreateCauseRequest | UpdateCauseRequest | null;
 }
 
 
@@ -47,7 +47,7 @@ export class DonationEvent {
     timestamp: Date;
 
     @MarshalWith(OptionalOf(MarshalFrom(CreateDonationRequest)))
-    data: CreateDonationRequest|null;
+    data: CreateDonationRequest | null;
 }
 
 
@@ -68,5 +68,5 @@ export class ShareEvent {
     timestamp: Date;
 
     @MarshalWith(OptionalOf(MarshalFrom(CreateShareRequest)))
-    data: CreateShareRequest|null;
+    data: CreateShareRequest | null;
 }
