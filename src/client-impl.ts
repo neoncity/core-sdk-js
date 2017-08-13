@@ -72,7 +72,7 @@ export function newCorePublicClient(env: Env, origin: string, coreServiceHost: s
 }
 
 
-class CorePublicClientImpl {
+class CorePublicClientImpl implements CorePublicClient {
     private static readonly _getAllCauseSummariesOptions: RequestInit = {
         method: 'GET',
         cache: 'no-cache',
@@ -358,7 +358,7 @@ export function newCorePrivateClient(env: Env, origin: string, coreServiceHost: 
 }
 
 
-class CorePrivateClientImpl {
+class CorePrivateClientImpl implements CorePrivateClient {
     private static readonly _createCauseOptions: RequestInit = {
         method: 'POST',
         cache: 'no-cache',
