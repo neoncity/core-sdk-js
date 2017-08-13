@@ -2,7 +2,7 @@ import * as r from 'raynor'
 import { ArrayOf, ExtractError, Marshaller, MarshalEnum, MarshalFrom, MarshalWith } from 'raynor'
 
 import { Currency, CurrencyMarshaller, IBAN, IBANMarshaller } from '@neoncity/common-js'
-import { Session } from '@neoncity/identity-sdk-js'
+import { PublicUser } from '@neoncity/identity-sdk-js'
 
 
 export enum CauseState {
@@ -200,6 +200,8 @@ export class Cause {
 
 
 export class PublicCause extends Cause {
+    @MarshalWith(MarshalFrom(PublicUser))
+    user: PublicUser;
 }
 
 
@@ -240,8 +242,8 @@ export class DonationForCause {
     @MarshalWith(MarshalFrom(CurrencyAmount))
     amount: CurrencyAmount;
 
-    @MarshalWith(MarshalFrom(Session))
-    fromSession: Session;
+    @MarshalWith(MarshalFrom(PublicUser))
+    fromUser: PublicUser;
 
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
@@ -270,8 +272,8 @@ export class ShareForCause {
     @MarshalWith(FacebookPostIdMarshaller)
     facebookPostId: string;
 
-    @MarshalWith(MarshalFrom(Session))
-    fromSession: Session;
+    @MarshalWith(MarshalFrom(PublicUser))
+    fromUser: PublicUser;
 
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
