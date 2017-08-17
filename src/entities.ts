@@ -168,13 +168,13 @@ export class CauseSummary {
 
 export class CauseQuickAnalytics {
     @MarshalWith(r.NonNegativeIntegerMarshaller)
-    donations_count: number;
+    donationsCount: number;
 
     @MarshalWith(CurrencyMarshaller)
-    donated_amount: CurrencyAmount;
+    amountDonated: CurrencyAmount;
 
     @MarshalWith(r.NonNegativeIntegerMarshaller)
-    shares_count: number;
+    sharesCount: number;
 }
 
 
@@ -203,9 +203,6 @@ export class Cause {
     @MarshalWith(CurrencyMarshaller)
     goal: CurrencyAmount;
 
-    @MarshalWith(MarshalFrom(CauseQuickAnalytics))
-    quickAnalytics: CauseQuickAnalytics;
-
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;
 
@@ -215,6 +212,9 @@ export class Cause {
 
 
 export class PublicCause extends Cause {
+    @MarshalWith(MarshalFrom(CauseQuickAnalytics))
+    quickAnalytics: CauseQuickAnalytics;
+
     @MarshalWith(MarshalFrom(PublicUser))
     user: PublicUser;
 }
