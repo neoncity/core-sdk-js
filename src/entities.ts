@@ -170,7 +170,7 @@ export class CauseQuickAnalytics {
     @MarshalWith(r.NonNegativeIntegerMarshaller)
     donationsCount: number;
 
-    @MarshalWith(CurrencyMarshaller)
+    @MarshalWith(MarshalFrom(CurrencyAmount))
     amountDonated: CurrencyAmount;
 
     @MarshalWith(r.NonNegativeIntegerMarshaller)
@@ -200,7 +200,7 @@ export class Cause {
     @MarshalWith(r.TimeMarshaller)
     deadline: Date;
 
-    @MarshalWith(CurrencyMarshaller)
+    @MarshalWith(MarshalFrom(CurrencyAmount))
     goal: CurrencyAmount;
 
     @MarshalWith(r.TimeMarshaller)
