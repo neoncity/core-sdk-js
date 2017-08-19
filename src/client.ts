@@ -64,7 +64,7 @@ export interface CorePublicClient {
     getCauses(): Promise<PublicCause[]>;
     getCause(causeId: number): Promise<PublicCause>;
     createDonation(session: Session, causeId: number, amount: CurrencyAmount): Promise<DonationForSession>;
-    createShare(session: Session, causeId: number, facebookPostId: string): Promise<ShareForSession>;
+    createShare(session: Session, causeId: number): Promise<ShareForSession>;
 }
 
 
