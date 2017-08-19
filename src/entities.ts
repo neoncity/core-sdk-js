@@ -47,23 +47,6 @@ export class DescriptionMarshaller extends r.MaxLengthStringMarshaller {
 }
 
 
-export class FacebookPostIdMarshaller extends r.MaxLengthStringMarshaller {
-    private static readonly _numberRegExp: RegExp = new RegExp('^[0-9]+$');
-
-    constructor() {
-        super(128);
-    }
-
-    filter(s: string): string {
-        if (!FacebookPostIdMarshaller._numberRegExp.test(s)) {
-            throw new ExtractError('Expected a post id');
-        }
-
-        return s;
-    }
-}
-
-
 export class Picture {
     @MarshalWith(r.PositiveIntegerMarshaller)
     position: number;
@@ -284,9 +267,6 @@ export class ShareForCause {
     @MarshalWith(r.IdMarshaller)
     id: number;
 
-    @MarshalWith(FacebookPostIdMarshaller)
-    facebookPostId: string;
-
     @MarshalWith(MarshalFrom(PublicUser))
     fromUser: PublicUser;
 
@@ -301,9 +281,6 @@ export class ShareForSession {
 
     @MarshalWith(MarshalFrom(PublicCause))
     forCause: PublicCause;
-
-    @MarshalWith(FacebookPostIdMarshaller)
-    facebookPostId: string;
 
     @MarshalWith(r.TimeMarshaller)
     timeCreated: Date;

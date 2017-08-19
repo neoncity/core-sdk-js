@@ -293,9 +293,8 @@ class CorePublicClientImpl implements CorePublicClient {
         }
     }
 
-    async createShare(session: Session, causeId: number, facebookPostId: string): Promise<ShareForSession> {
+    async createShare(session: Session, causeId: number): Promise<ShareForSession> {
         const createShareRequest = new CreateShareRequest();
-        createShareRequest.facebookPostId = facebookPostId;
 
         const options = this._buildOptions(CorePublicClientImpl._createShareOptions, session);
         options.headers['Content-Type'] = 'application/json';

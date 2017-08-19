@@ -6,7 +6,6 @@ import {
     BankInfoMarshaller,
     CurrencyAmount,
     DescriptionMarshaller,
-    FacebookPostIdMarshaller,
     PictureSet,
     PictureSetMarshaller,
     TitleMarshaller
@@ -62,6 +61,4 @@ export class CreateDonationRequest {
 
 
 export class CreateShareRequest {
-    @MarshalWith(FacebookPostIdMarshaller)
-    facebookPostId: string;
 }
